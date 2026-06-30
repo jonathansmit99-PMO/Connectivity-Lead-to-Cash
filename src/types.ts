@@ -1,0 +1,185 @@
+export interface Lead {
+  id: string;
+  resellerName: string;
+  clientName: string;
+  email: string;
+  phone: string;
+  companyName: string;
+  registrationNumber: string;
+  vatNumber: string;
+  industry: string;
+  address: string;
+  primaryBillingContact: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  secondaryAuthContact: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  status: 'lead_captured' | 'company_details_entered' | 'documents_uploaded' | 'compliance_pending' | 'compliance_checks_running' | 'compliance_completed' | 'contract_drafted' | 'contract_signed' | 'active';
+  documents: {
+    registrationPapers?: string;
+    proofOfAddress?: string;
+    signatoryId?: string;
+    bankProof?: string;
+    taxInfo?: string;
+    cipcDocs?: string;
+  };
+  complianceResults?: {
+    ficaVerified: boolean;
+    cddVerified: boolean;
+    ncaAffordability: boolean;
+    kybVerified: boolean;
+    notes: string;
+    checkedBy: string;
+    checkedAt: string;
+  };
+  contract?: {
+    draftUrl?: string;
+    draftText?: string;
+    signedDate?: string;
+    signatureClient?: string;
+    signatureReunert?: string;
+  };
+  createdAt: string;
+}
+
+export interface FeasibilityStudy {
+  id: string;
+  leadId: string;
+  address: string;
+  gpsCoordinates: string;
+  status: 'not_started' | 'running' | 'completed';
+  services: Array<{
+    type: 'Fiber' | 'Wireless' | 'Satellite' | 'LTE';
+    available: boolean;
+    vendor: string;
+    maxSpeed: string;
+    latency: string;
+    estimatedLeadTime: string;
+  }>;
+}
+
+export interface ProductSelection {
+  leadId: string;
+  serviceType: 'broadband' | 'enterprise';
+  bandwidth: string; // e.g. "100 Mbps", "1 Gbps"
+  term: '12' | '24' | '36'; // months
+  vendor: string;
+}
+
+export interface Quotation {
+  id: string;
+  leadId: string;
+  address: string;
+  gpsCoordinates: string;
+  networkOperator: string; // e.g. "Fibre Com Connect", "Reunert Infra"
+  networkType: 'Fiber' | 'Wireless' | 'LTE';
+  networkStatus: 'Live' | 'WIP';
+  leadTimeWeeks: number;
+  bandwidth: string;
+  nrc: number; // Non-Recurring Cost
+  mrc: number; // Monthly Recurring Cost
+  termMonths: number;
+  lastMileProvider: string;
+  contention: string; // e.g., "1:1", "1:10"
+  provisioningType: 'Layer 2' | 'Layer 3';
+  notes: string;
+  pricingValidityDays: number; // usually 30
+  status: 'draft' | 'uploaded' | 'margin_verified' | 'po_uploaded' | 'rejected';
+  marginPercentage: number;
+  poNumber?: string;
+  poUploadedAt?: string;
+}
+
+export interface OccupancyDocument {
+  id: string;
+  leadId: string;
+  buildingName: string;
+  address: string;
+  gpsCoordinates: string;
+  onsiteContactName: string;
+  onsiteContactPhone: string;
+  onsiteContactEmail: string;
+  landlordName: string;
+  landlordPhone: string;
+  landlordEmail: string;
+  gpsValidated: boolean;
+  termsAgreed: boolean;
+  status: 'pending' | 'submitted';
+}
+
+export interface ProjectCase {
+  id: string;
+  leadId: string;
+  quotationId: string;
+  status: 'case_created' | 'survey_scheduled' | 'survey_completed' | 'planning_uploaded' | 'landlord_approval_pending' | 'landlord_approved' | 'installation_scheduled' | 'installed' | 'testing_and_handover' | 'router_configured' | 'live';
+  surveyDate?: string;
+  planningDocName?: string;
+  planningDocUrl?: string;
+  handoverCertificate?: {
+    testResults: string; // e.g., "100Mbps download, 98Mbps upload, zero loss"
+    linkStatus: 'Excellent' | 'Good' | 'Fair';
+    ipSubnet: string; // e.g., "196.15.22.40/29"
+    vlanId: number;
+    handoverDate: string;
+  };
+  routerInstalled: boolean;
+  finalTestingPassed: boolean;
+  clientSignedOff: boolean;
+  clientSignOffDate?: string;
+  slaTerms: string; // e.g. "99.5% uptime SLA, 4 hour MTTR"
+}
+
+export interface SupportTicket {
+  id: string;
+  projectCaseId: string;
+  companyName: string;
+  issueType: 'Speed' | 'Latency' | 'Billing' | 'Hardware' | 'Other';
+  description: string;
+  status: 'open' | 'in_progress' | 'resolved';
+  loggedAt: string;
+  resolutionNotes?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: string; // e.g., "Client", "KAM" (Key Account Manager), "System"
+  text: string;
+  timestamp: string;
+}
+
+export interface LifecycleRequest {
+  id: string;
+  leadId: string;
+  companyName: string;
+  requestType: 'renewal' | 'cancellation' | 'outdoor_transfer' | 'upgrade';
+  status: 'pending_sales' | 'pending_procurement' | 'approved' | 'rejected';
+  details: {
+    newTermMonths?: number;
+    newBandwidth?: string;
+    newAddress?: string;
+    newCoordinates?: string;
+    reason?: string;
+    effectiveDate: string;
+  };
+  submittedBy: string;
+  submittedAt: string;
+  vettedBySales?: {
+    vetted: boolean;
+    vettedBy: string;
+    vettedAt: string;
+    status: 'approved' | 'rejected';
+    notes?: string;
+  };
+  vettedByProcurement?: {
+    vetted: boolean;
+    vettedBy: string;
+    vettedAt: string;
+    status: 'approved' | 'rejected';
+    notes?: string;
+  };
+}
