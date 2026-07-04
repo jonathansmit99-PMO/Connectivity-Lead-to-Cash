@@ -31,7 +31,7 @@ import {
 } from "./data";
 
 // Subcomponents
-import ReunertLogo from "./components/ReunertLogo";
+import ConnectNavLogo from "./components/ConnectNavLogo";
 import LeadCapture from "./components/LeadCapture";
 import FeasibilityProduct from "./components/FeasibilityProduct";
 import ProcurementVerification from "./components/ProcurementVerification";
@@ -157,7 +157,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Logo Brand Title */}
           <div className="flex items-center gap-3">
-            <ReunertLogo light={true} className="text-white" />
+            <ConnectNavLogo light={true} className="text-white" />
             <div className="h-6 w-px bg-slate-700 hidden sm:block"></div>
             <div className="hidden sm:block">
               <span className="text-xs font-semibold bg-slate-800 px-2.5 py-1 rounded text-slate-300 border border-slate-700">Lead to Cash Workflow Engine</span>
@@ -348,7 +348,7 @@ export default function App() {
       {/* 5. humble footer (strictly obeying aesthetic pairs) */}
       <footer className="bg-slate-900 border-t border-slate-800 py-6 text-slate-500 mt-auto text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} Reunert Connect. All rights reserved. Platform optimized for enterprise compliance regulations.</p>
+          <p>© {new Date().getFullYear()} ConnectNAV. All rights reserved. Platform optimized for enterprise compliance regulations.</p>
           <p className="font-mono text-[10px] text-slate-600">L2C-VERSION: 1.4.0-PROTOTYPE</p>
         </div>
       </footer>

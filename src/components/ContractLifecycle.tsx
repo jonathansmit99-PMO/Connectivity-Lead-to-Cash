@@ -264,7 +264,7 @@ export default function ContractLifecycle({
           
           <div className="space-y-3 text-xs text-slate-600">
             <p>
-              Reunert Connect provides seamless link management. Any requested modification must pass through strict commercial and engineering review.
+              ConnectNAV provides seamless link management. Any requested modification must pass through strict commercial and engineering review.
             </p>
             <div className="space-y-2 pt-2">
               <div className="flex gap-2">

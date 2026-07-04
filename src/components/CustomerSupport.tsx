@@ -43,7 +43,7 @@ export default function CustomerSupport({
 
   // State for KAM Chat
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    { id: "msg-1", sender: "KAM", text: "Hello! I am your Reunert Assist Key Account Manager (KAM) AI Assistant. How can I assist you with your Lead-to-Cash onboarding, FICA compliance reviews, or active service SLAs today?", timestamp: new Date().toISOString() }
+    { id: "msg-1", sender: "KAM", text: "Hello! I am your ConnectNAV Assist Key Account Manager (KAM) AI Assistant. How can I assist you with your Lead-to-Cash onboarding, FICA compliance reviews, or active service SLAs today?", timestamp: new Date().toISOString() }
   ]);
   const [userInput, setUserInput] = useState("");
   const [sendingChat, setSendingChat] = useState(false);
@@ -238,7 +238,7 @@ export default function CustomerSupport({
               <h3 className="font-display font-semibold text-sm text-slate-800">Key Account Manager (KAM) Chat</h3>
               <p className="text-[10px] text-emerald-600 flex items-center gap-1 font-semibold mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                Powered by Reunert Assist
+                Powered by ConnectNAV Assist
               </p>
             </div>
           </div>

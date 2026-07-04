@@ -41,10 +41,10 @@ export const INITIAL_LEADS: Lead[] = [
       checkedAt: "2026-06-25T11:20:00Z"
     },
     contract: {
-      draftText: "### MASTER SERVICES AGREEMENT ADDENDUM\n\n**BETWEEN:**\nReunert Connect (Pty) Ltd\n\n**AND:**\nAlpha Banking Corporation Ltd (Registration: 2015/348291/06)\n\nThis agreement outlines the provision of high-speed enterprise dedicated fiber links with SLA thresholds of 99.5% uptime.\n\nSigned on 2026-06-26.",
+      draftText: "### MASTER SERVICES AGREEMENT ADDENDUM\n\n**BETWEEN:**\nConnectNAV (Pty) Ltd\n\n**AND:**\nAlpha Banking Corporation Ltd (Registration: 2015/348291/06)\n\nThis agreement outlines the provision of high-speed enterprise dedicated fiber links with SLA thresholds of 99.5% uptime.\n\nSigned on 2026-06-26.",
       signedDate: "2026-06-26T14:30:00Z",
       signatureClient: "Dumisani Khumalo",
-      signatureReunert: "Director of Reunert Connect"
+      signatureReunert: "Director of ConnectNAV"
     },
     createdAt: "2026-06-24T09:15:00Z"
   },
@@ -81,7 +81,7 @@ export const INITIAL_LEADS: Lead[] = [
   },
   {
     id: "lead-003",
-    resellerName: "Reunert Direct Agent",
+    resellerName: "ConnectNAV Agent",
     clientName: "Cape Logistics Ltd",
     email: "cape.ops@capelogistics.co.za",
     phone: "+27 21 551 2000",

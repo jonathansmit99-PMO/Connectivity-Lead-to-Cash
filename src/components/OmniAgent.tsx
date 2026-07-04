@@ -139,7 +139,7 @@ export default function OmniAgent({
 
   // Initialize with greeting message
   useEffect(() => {
-    const greetingText = `Hello! I am **Reunert Assist**, your intelligent Lead-to-Cash (L2C) workspace companion. 
+    const greetingText = `Hello! I am **ConnectNAV Assist**, your intelligent Lead-to-Cash (L2C) workspace companion. 
 
 I have full access to your environment context:
 - **Active Lead**: \`${activeLead?.companyName || "None"}\` (Stage: \`${activeLead?.status || "None"}\`)
@@ -151,7 +151,7 @@ Ask me anything about margins, SLA terms, CIPC / FICA compliance status, link de
     setChatMessages([
       {
         id: "omni-greet",
-        sender: "Reunert Assist",
+        sender: "ConnectNAV Assist",
         text: greetingText,
         timestamp: new Date().toISOString()
       }
@@ -246,7 +246,7 @@ Ask me anything about margins, SLA terms, CIPC / FICA compliance status, link de
         const result = await response.json();
         const agentMsg: ChatMessage = {
           id: `omni-a-${Date.now()}`,
-          sender: "Reunert Assist",
+          sender: "ConnectNAV Assist",
           text: result.text,
           timestamp: new Date().toISOString()
         };
@@ -275,7 +275,7 @@ Ask me anything about margins, SLA terms, CIPC / FICA compliance status, link de
             text = "No connectivity delivery pipeline exists. Leads must first complete credit/compliance signoff to generate delivery cases.";
           }
         } else if (ltext.includes("help") || ltext.includes("how to") || ltext.includes("stage")) {
-          text = `Reunert Connect operates a 7-phase Lead-to-Cash (L2C) workflow:
+          text = `ConnectNAV operates a 7-phase Lead-to-Cash (L2C) workflow:
 1. **Phase 1: Onboarding Flow** - Capture clients and upload legal paperwork.
 2. **Phase 2: Feasibility & Quote** - Perform fiber checks and design quotes.
 3. **Phase 3: Margin & Handoff** - Verify gross margins (baseline 35%) and verify FICA documents.
@@ -287,7 +287,7 @@ Ask me anything about margins, SLA terms, CIPC / FICA compliance status, link de
 
         const agentMsg: ChatMessage = {
           id: `omni-fallback-${Date.now()}`,
-          sender: "Reunert Assist",
+          sender: "ConnectNAV Assist",
           text: text,
           timestamp: new Date().toISOString()
         };
@@ -364,7 +364,7 @@ Ask me anything about margins, SLA terms, CIPC / FICA compliance status, link de
           <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
         </span>
         <MessageSquare className="w-4 h-4 shrink-0" />
-        <span>Reunert Assist</span>
+        <span>ConnectNAV Assist</span>
         {unreadCount > 0 && (
           <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold shadow-md animate-bounce">
             {unreadCount}
@@ -390,9 +390,9 @@ Ask me anything about margins, SLA terms, CIPC / FICA compliance status, link de
                 </div>
                 <div>
                   <h3 className="text-xs font-bold font-sans text-white flex items-center gap-1.5">
-                    Reunert Assist
+                    ConnectNAV Assist
                   </h3>
-                  <p className="text-[9px] text-slate-400 font-mono tracking-wider uppercase">Reunert Connect Intelligent Assistant</p>
+                  <p className="text-[9px] text-slate-400 font-mono tracking-wider uppercase">ConnectNAV Intelligent Assistant</p>
                 </div>
               </div>
               <button

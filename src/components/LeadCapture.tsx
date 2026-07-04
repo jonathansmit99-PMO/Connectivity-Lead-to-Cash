@@ -224,7 +224,7 @@ export default function LeadCapture({
             ...l,
             status: "contract_drafted",
             contract: {
-              draftText: `### MASTER SERVICES AGREEMENT ADDENDUM\n\n**BETWEEN:**\nReunert Connect (Pty) Ltd\n\n**AND:**\n${l.companyName} (Registration: ${l.registrationNumber})\n\n---\n\n#### 1. SERVICE SPECIFICATION\nReunert Connect agrees to provide high-speed broadband/enterprise digital links through selected vendor networks. Capacity thresholds, billing schedules, and support Handover criteria shall be maintained at Gold Tier Class standards.\n\n#### 2. REGULATORY & FICA CLEARANCE\nBoth parties acknowledge that digital onboarding criteria, NCA affordability limits, and tax verification criteria have been audited, recorded, and verified.\n\n#### 3. SIGNATURE BLOCKS\nBoth parties authorize the execution of this addendum under South African digital signature and ECT Act provisions.\n\nSigned digitally by Client and Reunert Connect Management.`,
+              draftText: `### MASTER SERVICES AGREEMENT ADDENDUM\n\n**BETWEEN:**\nConnectNAV (Pty) Ltd\n\n**AND:**\n${l.companyName} (Registration: ${l.registrationNumber})\n\n---\n\n#### 1. SERVICE SPECIFICATION\nConnectNAV agrees to provide high-speed broadband/enterprise digital links through selected vendor networks. Capacity thresholds, billing schedules, and support Handover criteria shall be maintained at Gold Tier Class standards.\n\n#### 2. REGULATORY & FICA CLEARANCE\nBoth parties acknowledge that digital onboarding criteria, NCA affordability limits, and tax verification criteria have been audited, recorded, and verified.\n\n#### 3. SIGNATURE BLOCKS\nBoth parties authorize the execution of this addendum under South African digital signature and ECT Act provisions.\n\nSigned digitally by Client and ConnectNAV Management.`,
               draftUrl: "#"
             }
           };
@@ -246,7 +246,7 @@ export default function LeadCapture({
             ...l.contract,
             signedDate: new Date().toISOString(),
             signatureClient: l.clientName,
-            signatureReunert: "Operations Lead (Reunert Connect)"
+            signatureReunert: "Operations Lead (ConnectNAV)"
           }
         };
       }
@@ -701,7 +701,7 @@ export default function LeadCapture({
                       <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5" />
                       <div className="text-xs text-emerald-800">
                         <p className="font-bold">Contract Executed & Finalized</p>
-                        <p className="mt-1">Signed by: <span className="font-semibold">{activeLead.contract.signatureClient}</span> (Client) and <span className="font-semibold">{activeLead.contract.signatureReunert}</span> (Reunert Operator)</p>
+                        <p className="mt-1">Signed by: <span className="font-semibold">{activeLead.contract.signatureClient}</span> (Client) and <span className="font-semibold">{activeLead.contract.signatureReunert}</span> (ConnectNAV Operator)</p>
                         <p className="mt-0.5 text-[10px] text-emerald-600">Timestamp: {new Date(activeLead.contract.signedDate).toLocaleString()}</p>
                       </div>
                     </div>
