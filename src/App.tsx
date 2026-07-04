@@ -12,7 +12,8 @@ import {
   HelpCircle,
   TrendingDown,
   RefreshCw,
-  Award
+  Award,
+  Server
 } from "lucide-react";
 
 // Types
@@ -35,6 +36,7 @@ import LeadCapture from "./components/LeadCapture";
 import FeasibilityProduct from "./components/FeasibilityProduct";
 import ProcurementVerification from "./components/ProcurementVerification";
 import DeliveryServices from "./components/DeliveryServices";
+import EngineeringPhase from "./components/EngineeringPhase";
 import ExecutiveDashboard from "./components/ExecutiveDashboard";
 import CustomerSupport from "./components/CustomerSupport";
 import OmniAgent from "./components/OmniAgent";
@@ -225,8 +227,9 @@ export default function App() {
             { id: "feasibility", label: "Phase 2: Feasibility & Quote", icon: MapPin },
             { id: "margin", label: "Phase 3: Margin & Handoff", icon: ClipboardCheck },
             { id: "delivery", label: "Phase 4: Connectivity Delivery", icon: Network },
-            { id: "support", label: "Phase 5: Support & KAM Chat", icon: MessageSquare },
-            { id: "lifecycle", label: "Phase 6: Contract Lifecycle", icon: RefreshCw },
+            { id: "engineering", label: "Phase 5: Field & Remote Engineering", icon: Server },
+            { id: "support", label: "Phase 6: Support & KAM Chat", icon: MessageSquare },
+            { id: "lifecycle", label: "Phase 7: Contract Lifecycle", icon: RefreshCw },
             { id: "analytics", label: "Executive Visibility", icon: TrendingUp }
           ].map(tab => {
             const Icon = tab.icon;
@@ -288,6 +291,17 @@ export default function App() {
 
           {activeTab === "delivery" && (
             <DeliveryServices
+              leads={leads}
+              cases={cases}
+              setCases={setCases}
+              quotations={quotations}
+              activePersona={activePersona}
+              selectedLeadId={selectedLeadId}
+            />
+          )}
+
+          {activeTab === "engineering" && (
+            <EngineeringPhase
               leads={leads}
               cases={cases}
               setCases={setCases}

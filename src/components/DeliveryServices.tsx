@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Lead, ProjectCase, Quotation } from "../types";
 import { 
   Network, 
@@ -11,11 +11,17 @@ import {
   FileCheck, 
   UserCheck, 
   Layers, 
-  Tv, 
+  FileText, 
   Activity,
-  ChevronRight,
-  ShieldAlert,
-  Loader2
+  ArrowRight,
+  User,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Lock,
+  Edit2,
+  CalendarDays,
+  FileSignature
 } from "lucide-react";
 
 interface DeliveryServicesProps {
@@ -39,513 +45,1030 @@ export default function DeliveryServices({
   const activeCase = cases.find(c => c.leadId === activeLead?.id);
   const activeQuote = quotations.find(q => q.leadId === activeLead?.id);
 
-  // Local state managers
-  const [surveyDate, setSurveyDate] = useState("");
-  const [planningDocUploaded, setPlanningDocUploaded] = useState(false);
-  const [isSurveying, setIsSurveying] = useState(false);
-  const [isActivating, setIsActivating] = useState(false);
-  const [handoverForm, setHandoverForm] = useState({
-    testResults: "Symmetric throughput tested at contract capacity, packet loss 0%, optical signal -14.5dBm",
-    linkStatus: "Excellent" as "Excellent" | "Good" | "Fair",
-    ipSubnet: "196.15.52.128/29",
-    vlanId: 1042
-  });
+  // Local interaction states for inputs and files
+  const [localSurveyDate, setLocalSurveyDate] = useState("");
+  const [localSurveyEngineer, setLocalSurveyEngineer] = useState("Thabo Baloyi");
+  const [surveyNotes, setSurveyNotes] = useState("Line pathway and floor entries inspected. Basement server room rack slot 12B allocated.");
+  const [isUploadingPlanning, setIsUploadingPlanning] = useState(false);
+  const [isUploadingHandover, setIsUploadingHandover] = useState(false);
+  
+  const [signeeName, setSigneeName] = useState("");
+  const [signeeTitle, setSigneeTitle] = useState("Property Site Manager");
+  const [drawMode, setDrawMode] = useState<"type" | "draw">("type");
+  const [typedSignature, setTypedSignature] = useState("");
+  const [buildStart, setBuildStart] = useState("");
+  const [buildEnd, setBuildEnd] = useState("");
+
+  // Sync state variables whenever active case changes
+  useEffect(() => {
+    if (activeCase) {
+      setLocalSurveyDate(activeCase.surveyDate || "");
+      setLocalSurveyEngineer(activeCase.surveyEngineer || "Thabo Baloyi");
+      setSigneeName(activeCase.planningDocSignedBy || activeLead?.primaryBillingContact?.name || "");
+      setSigneeTitle(activeCase.planningDocSignedTitle || "Property Site Manager");
+      setTypedSignature(activeCase.planningDocSignedBy || activeLead?.primaryBillingContact?.name || "");
+      setBuildStart(activeCase.buildStartDate || "");
+      setBuildEnd(activeCase.buildEndDate || "");
+    }
+  }, [activeCase, activeLead]);
+
+  const handleQuickLaunchCase = () => {
+    const newCase: ProjectCase = {
+      id: `case-${Date.now().toString().slice(-3)}`,
+      leadId: activeLead.id,
+      quotationId: activeQuote?.id || "quote-001",
+      status: "case_created",
+      routerInstalled: false,
+      finalTestingPassed: false,
+      clientSignedOff: false,
+      slaTerms: activeQuote?.networkType === "Fiber" 
+        ? "99.5% Premium Fiber SLA, 4-hour Mean Time To Resolve (MTTR)" 
+        : "99.0% High-Availability Wireless SLA, 8-hour MTTR"
+    };
+    setCases(prev => [newCase, ...prev.filter(c => c.leadId !== activeLead.id)]);
+  };
 
   if (!activeCase) {
     return (
-      <div className="bg-white border border-slate-200 rounded-xl p-8 text-center shadow-sm">
-        <Network className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-        <h3 className="font-display font-semibold text-lg text-slate-700">Project Case Not Yet Triggered</h3>
-        <p className="text-sm text-slate-500 max-w-sm mx-auto mt-1 mb-4">
-          Once the client's corporate details are cleared by compliance and the Procurement Team issues the vendor purchase order, the order will convert into an active engineering delivery project.
+      <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center shadow-xs" id="phase4-no-case">
+        <Network className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+        <h3 className="font-sans font-bold text-xl text-slate-800">Project Case Not Yet Triggered</h3>
+        <p className="text-sm text-slate-500 max-w-md mx-auto mt-2 mb-6">
+          Once the client's corporate details are cleared by compliance and the Procurement Team issues the vendor purchase order (PO), the system will generate an active engineering delivery project case.
         </p>
-        <span className="text-xs bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-md font-semibold font-mono">
-          Awaiting step: "Phase 3: Margin & Handoff" Order placement.
-        </span>
+        <div className="mb-6">
+          <span className="text-xs bg-amber-50 text-amber-800 border border-amber-200 px-4 py-2 rounded-xl font-bold font-mono">
+            Awaiting step: "Phase 3: Margin & Handoff" PO placement.
+          </span>
+        </div>
+        <div className="pt-4 border-t border-slate-100 flex flex-col items-center gap-2">
+          <p className="text-xs text-slate-400 font-medium">Sandbox Bypass / Demo Mode:</p>
+          <button
+            onClick={handleQuickLaunchCase}
+            className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 transition-all shadow-xs cursor-pointer"
+          >
+            <Activity className="w-4 h-4" /> Initialize Phase 4 Engineering Case for {activeLead?.companyName}
+          </button>
+        </div>
       </div>
     );
   }
 
-  // Stepper logic
-  const steps = [
-    { key: "case_created", label: "Case Creation", desc: "Order converted to project case" },
-    { key: "survey_scheduled", label: "Site Survey & Planning", desc: "Schedule survey & upload planning doc" },
-    { key: "landlord_approved", label: "Landlord Approval", desc: "Obtain structural authorization" },
-    { key: "installed", label: "Fiber Installation", desc: "Vendor physical link setup" },
-    { key: "testing_and_handover", label: "Testing & Handover", desc: "Link tests, IP, & VLAN config" },
-    { key: "live", label: "Router Live Activation", desc: "Live client traffic routed" }
-  ];
-
-  const getStepStatus = (stepKey: string) => {
-    const statusOrder = [
-      "case_created",
-      "survey_scheduled",
-      "survey_completed",
-      "planning_uploaded",
-      "landlord_approval_pending",
-      "landlord_approved",
-      "installation_scheduled",
-      "installed",
-      "testing_and_handover",
-      "router_configured",
-      "live"
-    ];
-
-    const currentIdx = statusOrder.indexOf(activeCase.status);
-    
-    // Custom logic to map group states
-    if (stepKey === "case_created") return "completed";
-    
-    if (stepKey === "survey_scheduled") {
-      if (currentIdx >= statusOrder.indexOf("planning_uploaded")) return "completed";
-      if (currentIdx >= statusOrder.indexOf("survey_scheduled")) return "active";
-      return "pending";
-    }
-
-    if (stepKey === "landlord_approved") {
-      if (currentIdx >= statusOrder.indexOf("landlord_approved")) return "completed";
-      if (currentIdx >= statusOrder.indexOf("landlord_approval_pending")) return "active";
-      return "pending";
-    }
-
-    if (stepKey === "installed") {
-      if (currentIdx >= statusOrder.indexOf("installed")) return "completed";
-      if (currentIdx >= statusOrder.indexOf("installation_scheduled")) return "active";
-      return "pending";
-    }
-
-    if (stepKey === "testing_and_handover") {
-      if (currentIdx >= statusOrder.indexOf("testing_and_handover")) return "completed";
-      if (currentIdx >= statusOrder.indexOf("testing_and_handover")) return "active";
-      return "pending";
-    }
-
-    if (stepKey === "live") {
-      if (activeCase.status === "live") return "completed";
-      if (currentIdx >= statusOrder.indexOf("router_configured")) return "active";
-      return "pending";
-    }
-
-    return "pending";
+  // Helper to save case state to parent
+  const updateCaseField = (fields: Partial<ProjectCase>) => {
+    setCases(prev => prev.map(c => {
+      if (c.id === activeCase.id) {
+        return { ...c, ...fields };
+      }
+      return c;
+    }));
   };
 
-  // Stepper handlers
-  const handleScheduleSurvey = () => {
-    if (!surveyDate) return;
-    setIsSurveying(true);
+  // 1. Book Survey Date
+  const handleBookSurvey = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!localSurveyDate) return;
+    updateCaseField({
+      surveyDate: localSurveyDate,
+      surveyEngineer: localSurveyEngineer,
+      status: "survey_scheduled"
+    });
+  };
+
+  // 2. Survey Complete
+  const handleCompleteSurvey = () => {
+    updateCaseField({
+      surveyCompleted: true,
+      status: "survey_completed"
+    });
+  };
+
+  // 3. Load Planning Document
+  const handleMockUploadPlanning = () => {
+    setIsUploadingPlanning(true);
     setTimeout(() => {
-      setCases(prev => prev.map(c => {
-        if (c.id === activeCase.id) {
-          return {
-            ...c,
-            status: "survey_completed",
-            surveyDate: surveyDate
-          };
-        }
-        return c;
-      }));
-      setIsSurveying(false);
+      updateCaseField({
+        planningDocName: "Reunert_Civil_Route_Planning_v2.pdf",
+        planningDocUrl: "#",
+        status: "planning_uploaded"
+      });
+      setIsUploadingPlanning(false);
     }, 1200);
   };
 
-  const handleUploadPlanningDoc = () => {
-    setCases(prev => prev.map(c => {
-      if (c.id === activeCase.id) {
-        return {
-          ...c,
-          status: "planning_uploaded",
-          planningDocName: "Reunert_Sandton_Fiber_Route_v1.pdf",
-          planningDocUrl: "#"
-        };
-      }
-      return c;
-    }));
-    setPlanningDocUploaded(true);
-  };
-
-  const handleSendLandlordApproval = () => {
-    setCases(prev => prev.map(c => {
-      if (c.id === activeCase.id) {
-        return {
-          ...c,
-          status: "landlord_approval_pending"
-        };
-      }
-      return c;
-    }));
-
-    // Auto-approve after 3 seconds for mock demonstration
-    setTimeout(() => {
-      setCases(prev => prev.map(c => {
-        if (c.id === activeCase.id) {
-          return {
-            ...c,
-            status: "landlord_approved"
-          };
-        }
-        return c;
-      }));
-    }, 3000);
-  };
-
-  const handleScheduleInstallation = () => {
-    setCases(prev => prev.map(c => {
-      if (c.id === activeCase.id) {
-        return {
-          ...c,
-          status: "installed"
-        };
-      }
-      return c;
-    }));
-  };
-
-  const handleSaveHandover = (e: React.FormEvent) => {
+  // 4. Approve Planning Document
+  const handleSignPlanningDoc = (e: React.FormEvent) => {
     e.preventDefault();
-    setCases(prev => prev.map(c => {
-      if (c.id === activeCase.id) {
-        return {
-          ...c,
-          status: "testing_and_handover",
-          handoverCertificate: {
-            testResults: handoverForm.testResults,
-            linkStatus: handoverForm.linkStatus,
-            ipSubnet: handoverForm.ipSubnet,
-            vlanId: handoverForm.vlanId,
-            handoverDate: new Date().toISOString()
-          }
-        };
-      }
-      return c;
-    }));
+    if (!signeeName) return;
+    updateCaseField({
+      planningDocSigned: true,
+      planningDocSignedBy: signeeName,
+      planningDocSignedTitle: signeeTitle,
+      planningDocSignedDate: new Date().toISOString().split("T")[0],
+      status: "landlord_approved"
+    });
   };
 
-  const handleLiveActivation = () => {
-    setIsActivating(true);
+  // 5. Save Build Start Date
+  const handleSaveBuildStart = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!buildStart) return;
+    updateCaseField({
+      buildStartDate: buildStart
+    });
+  };
+
+  // 6. Save Build End Date
+  const handleSaveBuildEnd = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!buildEnd) return;
+    updateCaseField({
+      buildEndDate: buildEnd,
+      status: "installed"
+    });
+  };
+
+  // 7. Upload Handover Certificate
+  const handleMockUploadHandover = () => {
+    setIsUploadingHandover(true);
     setTimeout(() => {
-      setCases(prev => prev.map(c => {
-        if (c.id === activeCase.id) {
-          return {
-            ...c,
-            status: "live",
-            routerInstalled: true,
-            finalTestingPassed: true,
-            clientSignedOff: true,
-            clientSignOffDate: new Date().toISOString()
-          };
-        }
-        return c;
-      }));
-      setIsActivating(false);
-    }, 2000);
+      updateCaseField({
+        handoverDocName: "Reunert_Handover_SLA_Cleared_Final.pdf",
+        handoverDocUrl: "#",
+        status: "testing_and_handover"
+      });
+      setIsUploadingHandover(false);
+    }, 1200);
+  };
+
+  // Define the 7 progress steps
+  const stepsList = [
+    { key: "book_survey", label: "Book Survey Date", done: !!activeCase.surveyDate },
+    { key: "survey_complete", label: "Survey Date Complete", done: !!activeCase.surveyCompleted },
+    { key: "load_planning", label: "Load Planning Document", done: !!activeCase.planningDocName },
+    { key: "approve_planning", label: "Approve Planning Document", done: !!activeCase.planningDocSigned },
+    { key: "build_start", label: "Build Start Date", done: !!activeCase.buildStartDate },
+    { key: "build_end", label: "Build End Date", done: !!activeCase.buildEndDate },
+    { key: "upload_handover", label: "Upload Handover Certificate", done: !!activeCase.handoverDocName },
+  ];
+
+  // Helper to get step status (completed, active, locked)
+  const getStepStatus = (index: number) => {
+    const step = stepsList[index];
+    if (step.done) return "completed";
+    
+    // An item is active if all preceding items are done
+    const precedingDone = stepsList.slice(0, index).every(s => s.done);
+    if (precedingDone) return "active";
+    
+    return "locked";
+  };
+
+  // Calculate building days if build dates are available
+  const getBuildDuration = () => {
+    if (!activeCase.buildStartDate || !activeCase.buildEndDate) return null;
+    const start = new Date(activeCase.buildStartDate);
+    const end = new Date(activeCase.buildEndDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return diffDays;
+  };
+
+  const durationDays = getBuildDuration();
+
+  // Reset helper for Phase 4 sandbox testing
+  const handleResetPhase4 = () => {
+    if (window.confirm("Do you want to reset Phase 4 delivery states to test the workflow from scratch?")) {
+      updateCaseField({
+        surveyDate: undefined,
+        surveyCompleted: undefined,
+        planningDocName: undefined,
+        planningDocUrl: undefined,
+        planningDocSigned: undefined,
+        planningDocSignedBy: undefined,
+        planningDocSignedTitle: undefined,
+        planningDocSignedDate: undefined,
+        buildStartDate: undefined,
+        buildEndDate: undefined,
+        handoverDocName: undefined,
+        handoverDocUrl: undefined,
+        status: "case_created"
+      });
+      setLocalSurveyDate("");
+      setBuildStart("");
+      setBuildEnd("");
+    }
   };
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6" id="delivery-stepper-root">
-      {/* Left Stepper Track */}
-      <div className="xl:col-span-1 bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider pb-3 border-b border-slate-100 mb-5 flex items-center gap-1.5">
-          <Activity className="w-4 h-4 text-teal-600 animate-pulse" />
-          Connectivity Activation Stepper
-        </h3>
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in" id="phase4-container">
+      
+      {/* LEFT COLUMN: Workspace 7-Step Sidebar Indicator */}
+      <div className="lg:col-span-3 space-y-6">
+        <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-md border border-slate-800">
+          <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+            <div className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-teal-400 animate-pulse" />
+              <h3 className="font-sans font-black text-xs uppercase tracking-wider text-slate-300">Phase 4 Workflow</h3>
+            </div>
+            <button 
+              onClick={handleResetPhase4}
+              className="text-[10px] text-slate-400 hover:text-white underline cursor-pointer"
+              title="Reset Phase 4 parameters to test again"
+            >
+              Reset Stage
+            </button>
+          </div>
+          
+          <div className="space-y-4 relative pl-1">
+            {/* Visual connector line */}
+            <div className="absolute left-3.5 top-2.5 bottom-2.5 w-[2px] bg-slate-800" />
 
-        <div className="space-y-6 relative pl-3 border-l border-slate-100">
-          {steps.map((st, idx) => {
-            const stepStatus = getStepStatus(st.key);
-            return (
-              <div key={st.key} className="relative">
-                {/* Node pin */}
-                <div className={`absolute -left-[19px] top-1 w-3 h-3 rounded-full border-2 transition-all ${
-                  stepStatus === "completed" 
-                    ? "bg-emerald-500 border-white ring-4 ring-emerald-50" 
-                    : stepStatus === "active"
-                    ? "bg-teal-600 border-white ring-4 ring-teal-100 animate-pulse"
-                    : "bg-white border-slate-300"
-                }`} />
-
-                <div className="pl-3.5">
-                  <h4 className={`text-xs font-bold ${
-                    stepStatus === "completed" 
-                      ? "text-emerald-800 font-bold" 
-                      : stepStatus === "active"
-                      ? "text-teal-700 font-extrabold"
-                      : "text-slate-500 font-medium"
-                  }`}>{idx + 1}. {st.label}</h4>
-                  <p className="text-[11px] text-slate-400 mt-0.5 leading-tight">{st.desc}</p>
+            {stepsList.map((step, idx) => {
+              const status = getStepStatus(idx);
+              return (
+                <div key={step.key} className="relative pl-7 flex items-start gap-2 text-xs">
+                  {/* Step status node */}
+                  <div className={`absolute left-1.5 top-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black font-mono transition-all z-10 ${
+                    status === "completed" 
+                      ? "bg-emerald-500 text-slate-950 ring-4 ring-emerald-950/50" 
+                      : status === "active"
+                        ? "bg-teal-400 text-slate-900 ring-4 ring-teal-950/40 font-black animate-pulse"
+                        : "bg-slate-800 text-slate-500 border border-slate-700"
+                  }`}>
+                    {status === "completed" ? "✓" : idx + 1}
+                  </div>
+                  
+                  <div className="space-y-0.5">
+                    <h4 className={`font-bold leading-tight ${
+                      status === "completed" 
+                        ? "text-emerald-400" 
+                        : status === "active"
+                          ? "text-teal-300"
+                          : "text-slate-500"
+                    }`}>
+                      {step.label}
+                    </h4>
+                    <p className="text-[10px] text-slate-500">
+                      {status === "completed" ? "Completed" : status === "active" ? "Active State" : "Awaiting pre-reqs"}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-slate-800 text-[11px] text-slate-400 space-y-1">
+            <p>Active Client: <strong className="text-white">{activeLead.companyName}</strong></p>
+            <p>Assigned Operator: <strong className="text-teal-400">{activeQuote?.networkOperator || "Fibre Com Connect"}</strong></p>
+          </div>
         </div>
 
-        <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-100/60 text-xs text-slate-500 font-medium">
-          Current Order Status: <span className="font-mono font-bold text-slate-700 bg-slate-200/60 px-1.5 py-0.5 rounded text-[10px] uppercase">{activeCase.status}</span>
+        {/* Informative Tip Box */}
+        <div className="bg-amber-50/60 border border-amber-100 rounded-2xl p-5 text-xs text-amber-900 space-y-2">
+          <div className="flex items-center gap-1.5 font-bold text-amber-950">
+            <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
+            Connectivity Pipeline Notice
+          </div>
+          <p className="leading-relaxed text-[11px]">
+            This pipeline establishes the physical layer. Civil micro-trenching, road reserves, and optical fiber loops require active landlord signature clearances logged to the state database prior to live splicing.
+          </p>
         </div>
       </div>
 
-      {/* Main Interactive Work Area */}
-      <div className="xl:col-span-2 space-y-6">
-        {/* Survey & Planning Details */}
-        {(activeCase.status === "case_created" || activeCase.status === "survey_scheduled" || activeCase.status === "survey_completed" || activeCase.status === "planning_uploaded" || activeCase.status === "landlord_approval_pending") && (
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-5">
-            <h3 className="font-display font-semibold text-lg text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-teal-600" />
-              Site Survey, Engineering Route Mapping & Landlord Approval
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-600 uppercase">1. Schedule Civil Site Survey</h4>
-                <p className="text-xs text-slate-400">Project managers coordinate with physical engineering teams to inspect corporate campuses for route clearance.</p>
-                
-                {activeCase.surveyDate ? (
-                  <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-lg text-xs font-semibold">
-                    ✓ Survey Completed on {activeCase.surveyDate}
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <input
-                      type="date"
-                      value={surveyDate}
-                      onChange={(e) => setSurveyDate(e.target.value)}
-                      className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-xs text-slate-700 focus:ring-1 focus:ring-teal-500 focus:outline-none"
-                    />
-                    <button
-                      onClick={handleScheduleSurvey}
-                      disabled={isSurveying || !surveyDate}
-                      className="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1 disabled:opacity-50 cursor-pointer"
-                    >
-                      {isSurveying ? <Loader2 className="w-3 animate-spin" /> : "Verify Survey Completed"}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-600 uppercase">2. Route Planning Documentation</h4>
-                <p className="text-xs text-slate-400">Engineering teams upload civil planning maps detailing trench routes, pole installations, and building entry points.</p>
-
-                {activeCase.planningDocName ? (
-                  <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-lg text-xs font-semibold flex justify-between items-center">
-                    <span>File: {activeCase.planningDocName}</span>
-                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">Uploaded</span>
-                  </div>
-                ) : (
-                  <button
-                    disabled={!activeCase.surveyDate}
-                    onClick={handleUploadPlanningDoc}
-                    className="w-full bg-slate-800 hover:bg-slate-900 disabled:opacity-50 text-white font-semibold py-2 rounded text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <Upload className="w-4 h-4" /> Upload Survey Civil Planning Map
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Landlord Approval trigger */}
-            {activeCase.planningDocName && (
-              <div className="pt-4 border-t border-slate-100 bg-slate-50/50 -mx-6 -mb-6 p-6 rounded-b-xl space-y-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-teal-600 mt-0.5" />
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-700">Submit for Electronic Landlord Structural Approval</h4>
-                    <p className="text-[11px] text-slate-500 mt-0.5">The platform auto-emails the uploaded PDF route map to landlord contacts. Landlords must digitally approve civil fiber works.</p>
-                  </div>
-                </div>
-
-                {activeCase.status === "landlord_approval_pending" ? (
-                  <div className="p-3 bg-teal-50 border border-teal-100 rounded-lg flex items-center justify-between text-xs text-teal-800">
-                    <span className="flex items-center gap-1.5 font-semibold font-mono uppercase tracking-wider">
-                      <Loader2 className="w-4 h-4 animate-spin" /> Landlord Approval Dispatch Pending...
-                    </span>
-                    <span className="text-[10px] text-teal-500">Auto-approves in 3s</span>
-                  </div>
-                ) : (
-                  <button
-                    onClick={handleSendLandlordApproval}
-                    className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg text-xs font-bold transition-all"
-                  >
-                    Send Planning Map for Landlord Signature Approval
-                  </button>
-                )}
-              </div>
-            )}
+      {/* RIGHT COLUMN: The Connected Single-Workflow Workspace */}
+      <div className="lg:col-span-9 space-y-6" id="phase4-workspace">
+        
+        {/* Header Summary */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <span className="text-[10px] font-mono bg-teal-50 text-teal-800 px-2 py-1 rounded-md font-extrabold uppercase tracking-wider border border-teal-100">
+              One Unified Implementation Pipeline
+            </span>
+            <h2 className="font-sans font-bold text-xl text-slate-800 mt-2">Phase 4: Physical Connectivity Delivery</h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Follow and complete the 7 chronological steps below to verify physical fiber routing, civil works, and engineering SLA handover.
+            </p>
           </div>
-        )}
-
-        {/* Physical Installation & Landlord Approved state */}
-        {(activeCase.status === "landlord_approved" || activeCase.status === "installation_scheduled") && (
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-5">
-            <h3 className="font-display font-semibold text-lg text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
-              <Layers className="w-5 h-5 text-teal-600" />
-              Landlord Approval Signed & Civil Installation Scheduled
-            </h3>
-
-            <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-xl flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5" />
-              <div className="text-xs text-emerald-800">
-                <p className="font-bold">Landlord Structural Consent Granted Digitally</p>
-                <p className="mt-1">Structural civil work permits generated. Road trenching and building entry approvals cleared under municipal by-laws.</p>
-              </div>
-            </div>
-
-            <div className="space-y-3 pt-2">
-              <h4 className="text-xs font-bold text-slate-600 uppercase">3. Deploy Fiber/Wireless Installation Teams</h4>
-              <p className="text-xs text-slate-400">Scheduled vendor installation crews will perform site fiber splice, termination, and optical line verification.</p>
-
-              {(activePersona === "Project Manager" || activePersona === "Admin") ? (
-                <button
-                  onClick={handleScheduleInstallation}
-                  className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 rounded-lg text-xs"
-                >
-                  Confirm Physical Splice & Line Installation Complete
-                </button>
-              ) : (
-                <div className="p-3 bg-amber-50 text-amber-700 border border-amber-100 text-center rounded-lg text-xs font-semibold">
-                  Switch to "Project Manager" persona to log splice/installation completion status.
-                </div>
-              )}
-            </div>
+          <div className="bg-slate-50 rounded-xl px-4 py-2.5 border border-slate-100 text-right">
+            <p className="text-[10px] text-slate-400 font-bold uppercase">Current Workflow Status</p>
+            <p className="text-xs font-mono font-black text-teal-700 mt-0.5 uppercase">
+              {activeCase.status.replace("_", " ")}
+            </p>
           </div>
-        )}
+        </div>
 
-        {/* Testing, Handover & IP Configuration */}
-        {(activeCase.status === "installed" || activeCase.status === "testing_and_handover" || activeCase.status === "router_configured") && (
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-5">
-            <h3 className="font-display font-semibold text-lg text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
-              <Cpu className="w-5 h-5 text-teal-600" />
-              4. Link Testing & Engineering Handover Certificate
-            </h3>
+        {/* The Vertical Stepper Loop (7 Connected Steps) */}
+        <div className="relative space-y-6">
+          {/* Connector Line behind cards */}
+          <div className="absolute left-8 top-10 bottom-10 w-[2px] bg-slate-100 hidden md:block" />
 
-            {activeCase.handoverCertificate ? (
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-150 space-y-3 text-xs text-slate-700">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-200 font-bold text-slate-800 uppercase">
-                  <span>Handover Certificate Cleared</span>
-                  <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 rounded-full font-mono">Verified</span>
+          {/* STAGE 1: Book Survey Date */}
+          {(() => {
+            const status = getStepStatus(0);
+            return (
+              <div 
+                className={`relative bg-white border rounded-2xl shadow-xs transition-all duration-300 ${
+                  status === "active" ? "border-teal-500 ring-2 ring-teal-50/50" : "border-slate-200"
+                } ${status === "locked" ? "opacity-60" : "opacity-100"}`}
+                id="step-book-survey"
+              >
+                {/* Visual Connector Node */}
+                <div className={`absolute -left-10 top-6 w-5 h-5 rounded-full border-4 flex items-center justify-center font-bold text-[10px] hidden md:flex transition-all ${
+                  status === "completed" 
+                    ? "bg-emerald-500 border-emerald-150 text-white" 
+                    : status === "active"
+                      ? "bg-teal-500 border-teal-100 text-white animate-pulse"
+                      : "bg-slate-100 border-slate-200 text-slate-400"
+                }`}>
+                  1
                 </div>
-                <div className="grid grid-cols-2 gap-y-1.5">
-                  <div><span className="text-slate-400">Test Metrics:</span> <span className="font-semibold text-slate-800">{activeCase.handoverCertificate.testResults}</span></div>
-                  <div><span className="text-slate-400">Optical Signal:</span> <span className="font-semibold text-emerald-700">{activeCase.handoverCertificate.linkStatus}</span></div>
-                  <div><span className="text-slate-400">Assigned IP:</span> <span className="font-mono font-bold text-slate-800">{activeCase.handoverCertificate.ipSubnet}</span></div>
-                  <div><span className="text-slate-400">802.1Q VLAN:</span> <span className="font-mono font-bold text-slate-800">VLAN {activeCase.handoverCertificate.vlanId}</span></div>
-                </div>
 
-                {true && (
-                  <div className="pt-3 border-t border-slate-200">
-                    <h4 className="text-[11px] font-bold text-slate-600 uppercase mb-2">5. Router Configuration & Service Activation</h4>
-                    <p className="text-[11px] text-slate-500 mb-3">Engineering team configures edge routers using VLAN {activeCase.handoverCertificate.vlanId} and IP credentials to set service active.</p>
-
-                    {(activePersona === "Project Manager" || activePersona === "Admin") ? (
-                      <button
-                        disabled={isActivating}
-                        onClick={handleLiveActivation}
-                        className="w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-1.5"
-                      >
-                        {isActivating ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Pinging edge nodes, verifying SLA thresholds & setting Live...
-                          </>
-                        ) : (
-                          <>
-                            <Tv className="w-4 h-4" />
-                            Provision Router & Set Service LIVE
-                          </>
-                        )}
-                      </button>
-                    ) : (
-                      <div className="p-3 bg-amber-50 text-amber-700 border border-amber-100 text-center rounded-lg text-xs font-semibold">
-                        Switch persona to "Project Manager" to provision router & trigger LIVE service.
+                <div className="p-6">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">1</span>
+                      <div>
+                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 1: Book Survey Date</h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Schedule the formal physical walk-through with a civil structural engineer.</p>
                       </div>
+                    </div>
+                    {status === "completed" ? (
+                      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-100 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        ✓ Survey Scheduled
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-100 px-2.5 py-1 rounded-full">
+                        Pending Booking
+                      </span>
                     )}
                   </div>
-                )}
-              </div>
-            ) : (
-              <form onSubmit={handleSaveHandover} className="space-y-4">
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Input optical signal levels and routing configurations to issue the commercial engineering handover certificate. This triggers router installation.
-                </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Optical/Wireless Test Results *</label>
-                    <input
-                      type="text"
-                      required
-                      value={handoverForm.testResults}
-                      onChange={(e) => setHandoverForm(prev => ({ ...prev, testResults: e.target.value }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Signal Status</label>
-                    <select
-                      value={handoverForm.linkStatus}
-                      onChange={(e) => setHandoverForm(prev => ({ ...prev, linkStatus: e.target.value as any }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800"
-                    >
-                      <option value="Excellent">Excellent (-12dBm to -18dBm)</option>
-                      <option value="Good">Good (-19dBm to -22dBm)</option>
-                      <option value="Fair">Fair (-23dBm to -26dBm)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Allocated Public IP Subnet *</label>
-                    <input
-                      type="text"
-                      required
-                      value={handoverForm.ipSubnet}
-                      onChange={(e) => setHandoverForm(prev => ({ ...prev, ipSubnet: e.target.value }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-mono"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">802.1Q Tagged VLAN ID *</label>
-                    <input
-                      type="number"
-                      required
-                      value={handoverForm.vlanId}
-                      onChange={(e) => setHandoverForm(prev => ({ ...prev, vlanId: parseInt(e.target.value) }))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-mono"
-                    />
+                  <div className="mt-4">
+                    {status === "completed" ? (
+                      <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div>
+                          <span className="text-slate-400 font-semibold">Survey Date & Time:</span>
+                          <p className="font-mono font-bold text-slate-800 mt-0.5">{activeCase.surveyDate}</p>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 font-semibold">Allocated Surveyor:</span>
+                          <p className="font-bold text-slate-800 mt-0.5">{activeCase.surveyEngineer || "Thabo Baloyi"}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleBookSurvey} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase">Survey Date *</label>
+                          <input
+                            type="date"
+                            required
+                            value={localSurveyDate}
+                            onChange={(e) => setLocalSurveyDate(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase">Assigned Engineer *</label>
+                          <input
+                            type="text"
+                            required
+                            value={localSurveyEngineer}
+                            onChange={(e) => setLocalSurveyEngineer(e.target.value)}
+                            placeholder="e.g. Thabo Baloyi"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                          />
+                        </div>
+                        <div className="flex items-end">
+                          <button
+                            type="submit"
+                            disabled={!localSurveyDate}
+                            className="w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-1.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                          >
+                            <CalendarDays className="w-4 h-4" /> Book Survey Date
+                          </button>
+                        </div>
+                      </form>
+                    )}
                   </div>
                 </div>
+              </div>
+            );
+          })()}
 
-                <button
-                  type="submit"
-                  className="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 rounded-lg text-xs"
-                >
-                  Generate & Store Handover Certificate
-                </button>
-              </form>
-            )}
+          {/* STAGE 2: Survey Date Complete */}
+          {(() => {
+            const status = getStepStatus(1);
+            return (
+              <div 
+                className={`relative bg-white border rounded-2xl shadow-xs transition-all duration-300 ${
+                  status === "active" ? "border-teal-500 ring-2 ring-teal-50/50" : "border-slate-200"
+                } ${status === "locked" ? "opacity-50 pointer-events-none" : "opacity-100"}`}
+                id="step-survey-complete"
+              >
+                {/* Visual Connector Node */}
+                <div className={`absolute -left-10 top-6 w-5 h-5 rounded-full border-4 flex items-center justify-center font-bold text-[10px] hidden md:flex transition-all ${
+                  status === "completed" 
+                    ? "bg-emerald-500 border-emerald-150 text-white" 
+                    : status === "active"
+                      ? "bg-teal-500 border-teal-100 text-white animate-pulse"
+                      : "bg-slate-100 border-slate-200 text-slate-400"
+                }`}>
+                  2
+                </div>
+
+                <div className="p-6">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">2</span>
+                      <div>
+                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 2: Survey Date Complete</h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Certify the survey has been physically conducted & civil constraints resolved.</p>
+                      </div>
+                    </div>
+                    {status === "completed" ? (
+                      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-100 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        ✓ Survey Executed
+                      </span>
+                    ) : status === "locked" ? (
+                      <span className="text-[10px] font-bold bg-slate-100 text-slate-400 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <Lock className="w-3 h-3" /> Locked
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-100 px-2.5 py-1 rounded-full">
+                        Pending Onsite Verification
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-4">
+                    {status === "completed" ? (
+                      <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-1 text-xs">
+                        <span className="text-slate-400 font-semibold">Survey Assessment Logs:</span>
+                        <p className="text-slate-700 leading-relaxed font-mono text-[11px] bg-white p-2.5 rounded-lg border border-slate-100">
+                          {surveyNotes}
+                        </p>
+                        <p className="text-[10px] text-emerald-600 font-bold mt-1">✓ Onsite civil constraints approved for cable-haul.</p>
+                      </div>
+                    ) : status === "active" ? (
+                      <div className="space-y-4">
+                        <div className="space-y-1.5">
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase">Onsite Engineering Field Findings</label>
+                          <textarea
+                            value={surveyNotes}
+                            onChange={(e) => setSurveyNotes(e.target.value)}
+                            rows={2}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:ring-1 focus:ring-teal-500 focus:outline-none font-mono"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleCompleteSurvey}
+                          className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 px-6 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <CheckCircle className="w-4 h-4" /> Mark Survey as Complete & Verified
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">Please book the survey date in Stage 1 first to unlock verification.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* STAGE 3: Load Planning Document */}
+          {(() => {
+            const status = getStepStatus(2);
+            return (
+              <div 
+                className={`relative bg-white border rounded-2xl shadow-xs transition-all duration-300 ${
+                  status === "active" ? "border-teal-500 ring-2 ring-teal-50/50" : "border-slate-200"
+                } ${status === "locked" ? "opacity-50 pointer-events-none" : "opacity-100"}`}
+                id="step-load-planning"
+              >
+                {/* Visual Connector Node */}
+                <div className={`absolute -left-10 top-6 w-5 h-5 rounded-full border-4 flex items-center justify-center font-bold text-[10px] hidden md:flex transition-all ${
+                  status === "completed" 
+                    ? "bg-emerald-500 border-emerald-150 text-white" 
+                    : status === "active"
+                      ? "bg-teal-500 border-teal-100 text-white animate-pulse"
+                      : "bg-slate-100 border-slate-200 text-slate-400"
+                }`}>
+                  3
+                </div>
+
+                <div className="p-6">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">3</span>
+                      <div>
+                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 3: Load Planning Document</h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Upload the CAD design/PDF map showing route trenching layouts.</p>
+                      </div>
+                    </div>
+                    {status === "completed" ? (
+                      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-100 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        ✓ Plan Loaded
+                      </span>
+                    ) : status === "locked" ? (
+                      <span className="text-[10px] font-bold bg-slate-100 text-slate-400 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <Lock className="w-3 h-3" /> Locked
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-100 px-2.5 py-1 rounded-full">
+                        Awaiting CAD Layout
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-4">
+                    {status === "completed" ? (
+                      <div className="p-4 bg-emerald-50/30 border border-emerald-100/60 rounded-xl flex items-center justify-between flex-wrap gap-2 text-xs">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-emerald-100 p-2.5 rounded-lg text-emerald-700">
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-700">{activeCase.planningDocName}</p>
+                            <p className="text-[10px] text-slate-400 font-mono">Format: PDF Map | Size: 4.8 MB</p>
+                          </div>
+                        </div>
+                        <a 
+                          href="#" 
+                          onClick={(e) => e.preventDefault()}
+                          className="text-xs text-teal-700 hover:text-teal-900 font-extrabold hover:underline"
+                        >
+                          Download Map Layout
+                        </a>
+                      </div>
+                    ) : status === "active" ? (
+                      <div 
+                        onClick={handleMockUploadPlanning}
+                        className="border-2 border-dashed border-slate-200 hover:border-teal-500 rounded-2xl p-6 text-center cursor-pointer transition-all bg-slate-50/50 hover:bg-slate-50"
+                      >
+                        {isUploadingPlanning ? (
+                          <div className="space-y-2 text-slate-500">
+                            <p className="text-xs animate-pulse font-bold">Parsing civil markers, compiling map coordinates...</p>
+                            <div className="w-32 h-1 bg-slate-200 rounded-full mx-auto overflow-hidden">
+                              <div className="h-full bg-teal-600 animate-[shimmer_1.5s_infinite] w-2/3 rounded-full" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-1.5">
+                            <Upload className="w-8 h-8 text-slate-400 mx-auto" />
+                            <p className="text-xs font-bold text-slate-700">Drag & Drop Civil PDF Route Map, or <span className="text-teal-600 underline">Browse files</span></p>
+                            <p className="text-[10px] text-slate-400 font-mono">Accepts PDF, CAD formats up to 25MB</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">Please complete Stage 2 first to enable document loading.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* STAGE 4: Approve Planning Document */}
+          {(() => {
+            const status = getStepStatus(3);
+            return (
+              <div 
+                className={`relative bg-white border rounded-2xl shadow-xs transition-all duration-300 ${
+                  status === "active" ? "border-teal-500 ring-2 ring-teal-50/50" : "border-slate-200"
+                } ${status === "locked" ? "opacity-50 pointer-events-none" : "opacity-100"}`}
+                id="step-approve-planning"
+              >
+                {/* Visual Connector Node */}
+                <div className={`absolute -left-10 top-6 w-5 h-5 rounded-full border-4 flex items-center justify-center font-bold text-[10px] hidden md:flex transition-all ${
+                  status === "completed" 
+                    ? "bg-emerald-500 border-emerald-150 text-white" 
+                    : status === "active"
+                      ? "bg-teal-500 border-teal-100 text-white animate-pulse"
+                      : "bg-slate-100 border-slate-200 text-slate-400"
+                }`}>
+                  4
+                </div>
+
+                <div className="p-6">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">4</span>
+                      <div>
+                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 4: Approve Planning Document</h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Capture corporate & landlord digital sign-offs for the civil build path.</p>
+                      </div>
+                    </div>
+                    {status === "completed" ? (
+                      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-100 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        ✓ Plan Approved
+                      </span>
+                    ) : status === "locked" ? (
+                      <span className="text-[10px] font-bold bg-slate-100 text-slate-400 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <Lock className="w-3 h-3" /> Locked
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-100 px-2.5 py-1 rounded-full">
+                        Awaiting Landlord Signature
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-4">
+                    {status === "completed" ? (
+                      <div className="p-4 bg-emerald-50/20 border border-emerald-150 rounded-xl space-y-2 text-xs text-slate-700">
+                        <div className="flex items-center gap-2 font-bold text-emerald-900">
+                          <UserCheck className="w-4 h-4 text-emerald-600" />
+                          Authenticated Electronic Approvals Logged
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-1 pt-1.5 border-t border-emerald-100 text-[10px] text-slate-500 font-mono">
+                          <div>Signee: <strong className="text-slate-800">{activeCase.planningDocSignedBy}</strong></div>
+                          <div>Corporate Title: <strong className="text-slate-800">{activeCase.planningDocSignedTitle}</strong></div>
+                          <div>Timestamp: <strong className="text-slate-800">{activeCase.planningDocSignedDate}</strong></div>
+                        </div>
+                      </div>
+                    ) : status === "active" ? (
+                      <form onSubmit={handleSignPlanningDoc} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase">Signatory Representative Name *</label>
+                            <input
+                              type="text"
+                              required
+                              value={signeeName}
+                              onChange={(e) => {
+                                setSigneeName(e.target.value);
+                                setTypedSignature(e.target.value);
+                              }}
+                              placeholder="e.g. Dumisani Khumalo"
+                              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase">Representative Legal Title *</label>
+                            <input
+                              type="text"
+                              required
+                              value={signeeTitle}
+                              onChange={(e) => setSigneeTitle(e.target.value)}
+                              placeholder="e.g. Property Representative"
+                              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Interactive Signature Area */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between text-xs text-slate-500">
+                            <span className="font-bold">E-Signature Pad</span>
+                            <div className="flex gap-2">
+                              <button 
+                                type="button" 
+                                onClick={() => setDrawMode("type")}
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold ${drawMode === "type" ? "bg-teal-100 text-teal-800" : "bg-slate-100 text-slate-500"}`}
+                              >
+                                Keyboard Stylized
+                              </button>
+                              <button 
+                                type="button" 
+                                onClick={() => setDrawMode("draw")}
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold ${drawMode === "draw" ? "bg-teal-100 text-teal-800" : "bg-slate-100 text-slate-500"}`}
+                              >
+                                Draw Manual
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="border border-slate-200 rounded-xl bg-slate-50 p-4 h-20 flex items-center justify-center relative overflow-hidden">
+                            {drawMode === "type" ? (
+                              typedSignature ? (
+                                <span className="font-serif italic text-2xl text-slate-800 tracking-wider font-bold select-none">
+                                  {typedSignature}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-slate-400">Signature renders as you type...</span>
+                              )
+                            ) : (
+                              <div className="w-full h-full flex flex-col justify-center items-center">
+                                <div className="w-full border-b border-dashed border-slate-300 max-w-xs h-0.5 mt-4" />
+                                <span className="text-[8px] text-slate-400 mt-1 uppercase tracking-wider font-bold">Use cursor/trackpad to sign</span>
+                              </div>
+                            )}
+                            <div className="absolute right-3 bottom-1.5 text-[8px] text-slate-400 font-mono">
+                              AUDIT ID: REUNERT-992-SECURE
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={!signeeName}
+                          className="w-full bg-slate-800 hover:bg-slate-950 text-white text-xs font-bold py-2.5 rounded-xl transition-all cursor-pointer"
+                        >
+                          Authenticate Landlord & Client Consent Approval
+                        </button>
+                      </form>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">Please complete Route Planning upload in Stage 3 first.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* STAGE 5: Build Start Date */}
+          {(() => {
+            const status = getStepStatus(4);
+            return (
+              <div 
+                className={`relative bg-white border rounded-2xl shadow-xs transition-all duration-300 ${
+                  status === "active" ? "border-teal-500 ring-2 ring-teal-50/50" : "border-slate-200"
+                } ${status === "locked" ? "opacity-50 pointer-events-none" : "opacity-100"}`}
+                id="step-build-start"
+              >
+                {/* Visual Connector Node */}
+                <div className={`absolute -left-10 top-6 w-5 h-5 rounded-full border-4 flex items-center justify-center font-bold text-[10px] hidden md:flex transition-all ${
+                  status === "completed" 
+                    ? "bg-emerald-500 border-emerald-150 text-white" 
+                    : status === "active"
+                      ? "bg-teal-500 border-teal-100 text-white animate-pulse"
+                      : "bg-slate-100 border-slate-200 text-slate-400"
+                }`}>
+                  5
+                </div>
+
+                <div className="p-6">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">5</span>
+                      <div>
+                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 5: Build Start Date</h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Determine the start date for civil trenching and roadway works.</p>
+                      </div>
+                    </div>
+                    {status === "completed" ? (
+                      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-100 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        ✓ Build Commenced
+                      </span>
+                    ) : status === "locked" ? (
+                      <span className="text-[10px] font-bold bg-slate-100 text-slate-400 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <Lock className="w-3 h-3" /> Locked
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-100 px-2.5 py-1 rounded-full">
+                        Awaiting Civil Start
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-4">
+                    {status === "completed" ? (
+                      <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                        <span className="text-slate-400 font-semibold">Trenching Commencement Date:</span>
+                        <p className="font-mono font-bold text-slate-800 mt-0.5">{activeCase.buildStartDate}</p>
+                      </div>
+                    ) : status === "active" ? (
+                      <form onSubmit={handleSaveBuildStart} className="flex flex-wrap md:flex-nowrap gap-4">
+                        <div className="w-full md:w-auto flex-1 space-y-1.5">
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase">Physical Civil Build Start Date *</label>
+                          <input
+                            type="date"
+                            required
+                            value={buildStart}
+                            onChange={(e) => setBuildStart(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                          />
+                        </div>
+                        <div className="w-full md:w-auto flex items-end">
+                          <button
+                            type="submit"
+                            disabled={!buildStart}
+                            className="w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2.5 px-6 rounded-xl transition-all cursor-pointer"
+                          >
+                            Save Start Date
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">Please complete Stage 4 route approval first.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* STAGE 6: Build End Date */}
+          {(() => {
+            const status = getStepStatus(5);
+            return (
+              <div 
+                className={`relative bg-white border rounded-2xl shadow-xs transition-all duration-300 ${
+                  status === "active" ? "border-teal-500 ring-2 ring-teal-50/50" : "border-slate-200"
+                } ${status === "locked" ? "opacity-50 pointer-events-none" : "opacity-100"}`}
+                id="step-build-end"
+              >
+                {/* Visual Connector Node */}
+                <div className={`absolute -left-10 top-6 w-5 h-5 rounded-full border-4 flex items-center justify-center font-bold text-[10px] hidden md:flex transition-all ${
+                  status === "completed" 
+                    ? "bg-emerald-500 border-emerald-150 text-white" 
+                    : status === "active"
+                      ? "bg-teal-500 border-teal-100 text-white animate-pulse"
+                      : "bg-slate-100 border-slate-200 text-slate-400"
+                }`}>
+                  6
+                </div>
+
+                <div className="p-6">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">6</span>
+                      <div>
+                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 6: Build End Date</h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Define the planned final completion/splicing target date.</p>
+                      </div>
+                    </div>
+                    {status === "completed" ? (
+                      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-100 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        ✓ Build Concluded
+                      </span>
+                    ) : status === "locked" ? (
+                      <span className="text-[10px] font-bold bg-slate-100 text-slate-400 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <Lock className="w-3 h-3" /> Locked
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-100 px-2.5 py-1 rounded-full">
+                        Awaiting Conclude Date
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-4">
+                    {status === "completed" ? (
+                      <div className="space-y-2">
+                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                          <span className="text-slate-400 font-semibold">Trenching Conclude/Splicing Date:</span>
+                          <p className="font-mono font-bold text-slate-800 mt-0.5">{activeCase.buildEndDate}</p>
+                        </div>
+                        {durationDays !== null && (
+                          <p className="text-[11px] text-teal-800 bg-teal-50 border border-teal-100 p-2.5 rounded-xl font-medium">
+                            ✓ Calculated Total Civil Window: <strong className="font-mono">{durationDays} Calendar Days</strong>.
+                          </p>
+                        )}
+                      </div>
+                    ) : status === "active" ? (
+                      <form onSubmit={handleSaveBuildEnd} className="flex flex-wrap md:flex-nowrap gap-4">
+                        <div className="w-full md:w-auto flex-1 space-y-1.5">
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase">Target Completion Date *</label>
+                          <input
+                            type="date"
+                            required
+                            min={activeCase.buildStartDate}
+                            value={buildEnd}
+                            onChange={(e) => setBuildEnd(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                          />
+                        </div>
+                        <div className="w-full md:w-auto flex items-end">
+                          <button
+                            type="submit"
+                            disabled={!buildEnd}
+                            className="w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2.5 px-6 rounded-xl transition-all cursor-pointer"
+                          >
+                            Save End Date
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">Please complete Stage 5 build start date logging.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* STAGE 7: Upload Handover Certificate */}
+          {(() => {
+            const status = getStepStatus(6);
+            return (
+              <div 
+                className={`relative bg-white border rounded-2xl shadow-xs transition-all duration-300 ${
+                  status === "active" ? "border-teal-500 ring-2 ring-teal-50/50" : "border-slate-200"
+                } ${status === "locked" ? "opacity-50 pointer-events-none" : "opacity-100"}`}
+                id="step-upload-handover"
+              >
+                {/* Visual Connector Node */}
+                <div className={`absolute -left-10 top-6 w-5 h-5 rounded-full border-4 flex items-center justify-center font-bold text-[10px] hidden md:flex transition-all ${
+                  status === "completed" 
+                    ? "bg-emerald-500 border-emerald-150 text-white" 
+                    : status === "active"
+                      ? "bg-teal-500 border-teal-100 text-white animate-pulse"
+                      : "bg-slate-100 border-slate-200 text-slate-400"
+                }`}>
+                  7
+                </div>
+
+                <div className="p-6">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">7</span>
+                      <div>
+                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 7: Upload Handover Certificate</h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Upload the final signed SLA engineering handover document to conclude Phase 4.</p>
+                      </div>
+                    </div>
+                    {status === "completed" ? (
+                      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-100 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        ✓ Handover Registered
+                      </span>
+                    ) : status === "locked" ? (
+                      <span className="text-[10px] font-bold bg-slate-100 text-slate-400 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <Lock className="w-3 h-3" /> Locked
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-100 px-2.5 py-1 rounded-full">
+                        Awaiting Handover Document
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-4">
+                    {status === "completed" ? (
+                      <div className="p-4 bg-emerald-50/30 border border-emerald-100/60 rounded-xl flex items-center justify-between flex-wrap gap-2 text-xs">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-emerald-100 p-2.5 rounded-lg text-emerald-700">
+                            <FileCheck className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-700">{activeCase.handoverDocName}</p>
+                            <p className="text-[10px] text-slate-400 font-mono">Format: PDF Certificate | Size: 2.1 MB</p>
+                          </div>
+                        </div>
+                        <a 
+                          href="#" 
+                          onClick={(e) => e.preventDefault()}
+                          className="text-xs text-teal-700 hover:text-teal-900 font-extrabold hover:underline"
+                        >
+                          View Handover PDF
+                        </a>
+                      </div>
+                    ) : status === "active" ? (
+                      <div className="space-y-3">
+                        <p className="text-xs text-slate-500">
+                          Please upload the signed Fiber Engineering Handover Certificate certifying decibel optical loss readings and baseline speed capabilities.
+                        </p>
+                        
+                        <div 
+                          onClick={handleMockUploadHandover}
+                          className="border-2 border-dashed border-slate-200 hover:border-teal-500 rounded-2xl p-6 text-center cursor-pointer transition-all bg-slate-50/50 hover:bg-slate-50"
+                        >
+                          {isUploadingHandover ? (
+                            <div className="space-y-2 text-slate-500">
+                              <p className="text-xs animate-pulse font-bold">Verifying testing logs & uploading SLA certificate...</p>
+                              <div className="w-32 h-1 bg-slate-200 rounded-full mx-auto overflow-hidden">
+                                <div className="h-full bg-teal-600 animate-[shimmer_1.5s_infinite] w-2/3 rounded-full" />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-1.5">
+                              <Upload className="w-8 h-8 text-slate-400 mx-auto" />
+                              <p className="text-xs font-bold text-slate-700">Drag & Drop Handover Certificate, or <span className="text-teal-600 underline">Browse files</span></p>
+                              <p className="text-[10px] text-slate-400 font-mono">Accepts PDF format up to 10MB</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">Please complete Stage 6 to enable certificate upload.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+        </div>
+
+        {/* Phase 4 Complete Success Banner */}
+        {activeCase.handoverDocName && (
+          <div className="p-5 bg-gradient-to-r from-teal-600 to-slate-800 text-white rounded-2xl shadow-md space-y-3 flex flex-col md:flex-row items-center justify-between gap-4 animate-fade-in">
+            <div>
+              <h4 className="font-sans font-bold text-sm">Phase 4 Connectivity Delivery Complete!</h4>
+              <p className="text-[11px] text-teal-100 max-w-lg mt-0.5">
+                All 7 stages of physical connectivity and civil works are signed and sealed. Proceed to the next tab **Phase 5: Field & Remote Engineering** to book field technicians and configure core router parameters.
+              </p>
+            </div>
+            <span className="text-xs bg-white/10 border border-white/20 px-3 py-2 rounded-lg flex items-center gap-1 shrink-0 font-bold font-mono">
+              Ready for Phase 5 <ArrowRight className="w-3.5 h-3.5" />
+            </span>
           </div>
         )}
 
-        {/* Fully Active / Live State */}
-        {activeCase.status === "live" && (
-          <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl p-6 shadow-md space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="bg-white/10 p-2.5 rounded-lg shrink-0">
-                <CheckCircle className="w-6 h-6 text-white animate-bounce" />
-              </div>
-              <div>
-                <h3 className="font-display font-semibold text-lg">System Live & Fully Operational!</h3>
-                <p className="text-xs text-teal-100 leading-relaxed mt-0.5">
-                  The client has successfully signed off on handovers. Symmetrical bandwidth routing is active, real-time performance is synchronized with active SLA monitors, and the commercial billing engine has triggered revenue recognition.
-                </p>
-              </div>
-            </div>
-
-            <div className="p-3.5 bg-white/10 rounded-lg border border-white/10 text-xs space-y-1.5">
-              <p className="font-bold">Active SLA Parameters:</p>
-              <p>• Uptime: <span className="font-bold text-emerald-300">99.5% Gold standard</span> | MTTR: <span className="font-bold text-emerald-300">4 Hours</span></p>
-              <p>• Assigned Subnets: <span className="font-mono font-bold text-slate-100">{activeCase.handoverCertificate?.ipSubnet}</span> | VLAN: <span className="font-mono font-bold text-slate-100">VLAN {activeCase.handoverCertificate?.vlanId}</span></p>
-              <p>• Signed Sign-off certificate: <span className="italic">Digitally verified by client {activeLead.clientName}</span> on {activeCase.clientSignOffDate ? new Date(activeCase.clientSignOffDate).toLocaleDateString() : ""}</p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

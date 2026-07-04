@@ -275,13 +275,14 @@ Ask me anything about margins, SLA terms, CIPC / FICA compliance status, link de
             text = "No connectivity delivery pipeline exists. Leads must first complete credit/compliance signoff to generate delivery cases.";
           }
         } else if (ltext.includes("help") || ltext.includes("how to") || ltext.includes("stage")) {
-          text = `Reunert Connect operates a 6-phase Lead-to-Cash (L2C) workflow:
+          text = `Reunert Connect operates a 7-phase Lead-to-Cash (L2C) workflow:
 1. **Phase 1: Onboarding Flow** - Capture clients and upload legal paperwork.
 2. **Phase 2: Feasibility & Quote** - Perform fiber checks and design quotes.
 3. **Phase 3: Margin & Handoff** - Verify gross margins (baseline 35%) and verify FICA documents.
-4. **Phase 4: Connectivity Delivery** - Manage router installations, final testing, and client sign-offs.
-5. **Phase 5: Support & KAM Chat** - Log service incidents and handle live SLA tickets.
-6. **Phase 6: Contract Lifecycle** - Request service renewals, cancellations, outdoor transfers, and upgrades with Sales & Procurement vetting.`;
+4. **Phase 4: Connectivity Delivery** - Civil route planning, landlord approval, and handover documents.
+5. **Phase 5: Field & Remote Engineering** - Book field technicians, deploy hardware, and remote core data centre configurations.
+6. **Phase 6: Support & KAM Chat** - Log service incidents and handle live SLA tickets.
+7. **Phase 7: Contract Lifecycle** - Request service renewals, cancellations, outdoor transfers, and upgrades with Sales & Procurement vetting.`;
         }
 
         const agentMsg: ChatMessage = {

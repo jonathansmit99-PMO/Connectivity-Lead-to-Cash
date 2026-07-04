@@ -118,8 +118,50 @@ export interface ProjectCase {
   quotationId: string;
   status: 'case_created' | 'survey_scheduled' | 'survey_completed' | 'planning_uploaded' | 'landlord_approval_pending' | 'landlord_approved' | 'installation_scheduled' | 'installed' | 'testing_and_handover' | 'router_configured' | 'live';
   surveyDate?: string;
+  surveyEngineer?: string;
+  surveyCompleted?: boolean;
   planningDocName?: string;
   planningDocUrl?: string;
+  planningDocSigned?: boolean;
+  planningDocSignedBy?: string;
+  planningDocSignedTitle?: string;
+  planningDocSignedDate?: string;
+  buildStartDate?: string;
+  buildEndDate?: string;
+  handoverDocName?: string;
+  handoverDocUrl?: string;
+  handoverDocUploadedAt?: string;
+  // New Phase 5 Booking Fields
+  bookingAddress?: string;
+  bookingGps?: string;
+  bookingContactName?: string;
+  bookingContactPhone?: string;
+  bookingContactEmail?: string;
+  bookingDateTime?: string;
+  bookingEquipment?: string;
+  // Phase 5 Field Engineer Action Fields
+  fieldArrivedAt?: string;
+  fieldDoneAt?: string;
+  fieldLinkUp?: boolean;
+  fieldClientGettingSpeed?: boolean;
+  fieldClientSpeedMetric?: string;
+  fieldVoiceActive?: boolean;
+  fieldCloudActive?: boolean;
+  fieldSecurityActive?: boolean;
+  fieldClientSignedOff?: boolean;
+  fieldClientSignName?: string;
+  fieldClientSignDate?: string;
+  // Phase 5 Remote Engineer Action Fields
+  remoteVlanId?: number;
+  remoteIpAddress?: string;
+  remoteSubnetAllocation?: '/30' | '/29' | '/31';
+  remoteBandwidth?: string;
+  remoteConnectivityTested?: boolean;
+  remoteConnectivityLog?: string;
+  remoteVoiceConfigured?: boolean;
+  remoteAdditionalVlans?: string;
+  remoteIpSecTunnels?: string;
+  
   handoverCertificate?: {
     testResults: string; // e.g., "100Mbps download, 98Mbps upload, zero loss"
     linkStatus: 'Excellent' | 'Good' | 'Fair';
