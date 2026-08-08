@@ -128,9 +128,9 @@ export default function LandingPage({ onNavigateTab, activeLeadCompanyName }: La
             <span>ConnectIQ Digital Marketplace</span>
           </div>
 
-          {/* Headline 1: Reunert ConnectIQ Connecting. */}
+          {/* Headline 1: Reunert ConnectIQ */}
           <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight font-sans leading-tight">
-            Reunert <span className="text-teal-400 underline decoration-teal-500/40 underline-offset-8">ConnectIQ</span> Connecting.
+            Reunert <span className="text-teal-400 underline decoration-teal-500/40 underline-offset-8">ConnectIQ</span>
           </h1>
 
           {/* Headline 2: Businesses Connected Without Limits. */}
