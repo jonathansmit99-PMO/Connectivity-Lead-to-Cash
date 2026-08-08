@@ -13,7 +13,8 @@ import {
   TrendingDown,
   RefreshCw,
   Award,
-  Server
+  Server,
+  Sparkles
 } from "lucide-react";
 
 // Types
@@ -31,6 +32,7 @@ import {
 } from "./data";
 
 // Subcomponents
+import LandingPage from "./components/LandingPage";
 import ConnectNavLogo from "./components/ConnectNavLogo";
 import LeadCapture from "./components/LeadCapture";
 import FeasibilityProduct from "./components/FeasibilityProduct";
@@ -92,7 +94,7 @@ export default function App() {
   });
 
   // Active workflow phase tab
-  const [activeTab, setActiveTab] = useState<string>("onboarding");
+  const [activeTab, setActiveTab] = useState<string>("landing");
 
   // Save state on any change
   useEffect(() => {
@@ -144,7 +146,7 @@ export default function App() {
       setLifecycleRequests(INITIAL_LIFECYCLE_REQUESTS);
       setSelectedLeadId(INITIAL_LEADS[0].id);
       setActivePersona("Admin");
-      setActiveTab("onboarding");
+      setActiveTab("landing");
     }
   };
 
@@ -223,6 +225,7 @@ export default function App() {
       <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex-1 flex flex-col gap-6">
         <div className="flex flex-wrap gap-2 pb-3 border-b border-slate-200">
           {[
+            { id: "landing", label: "Phase 1: ConnectIQ Landing", icon: Sparkles },
             { id: "onboarding", label: "Phase 1: Onboarding Flow", icon: Building },
             { id: "feasibility", label: "Phase 2: Feasibility & Quote", icon: MapPin },
             { id: "margin", label: "Phase 3: Margin & Handoff", icon: ClipboardCheck },
@@ -253,6 +256,13 @@ export default function App() {
 
         {/* 4. Tab Panels */}
         <div className="flex-1 pb-10">
+          {activeTab === "landing" && (
+            <LandingPage
+              onNavigateTab={(tabId) => setActiveTab(tabId)}
+              activeLeadCompanyName={activeLead?.companyName}
+            />
+          )}
+
           {activeTab === "onboarding" && (
             <LeadCapture
               leads={leads}

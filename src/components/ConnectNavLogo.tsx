@@ -1,105 +1,152 @@
 import React from "react";
 
-interface ConnectNavLogoProps {
+interface LogoProps {
   className?: string;
-  light?: boolean; // If true, colors are optimized for a dark background
+  light?: boolean; // If true, white/teal text for dark header background; if false, dark navy/teal text
+  showSubtitle?: boolean;
 }
 
-export default function ConnectNavLogo({ className = "", light = false }: ConnectNavLogoProps) {
-  // Brand colors matching the UI color scheme
-  const textColor = light ? "#FFFFFF" : "#1E293B"; // Slate-900 or White
-  const brandTeal = "#0D9488"; // Teal-600
-  const lightTeal = "#2DD4BF"; // Teal-400
-  const subTextColor = light ? "#94A3B8" : "#64748B"; // Slate-400 or Slate-500
+export default function ConnectNavLogo({ className = "", light = true, showSubtitle = true }: LogoProps) {
+  // Brand color palette strictly matching the official Reunert Connect corporate logo
+  const navyColor = light ? "#FFFFFF" : "#2A3249"; // Dark navy slate or pure white for dark header
+  const tealColor = light ? "#2DD4BF" : "#008A83"; // Brand Teal (#008A83)
+  const mutedColor = light ? "#CBD5E1" : "#2A3249"; // Muted text color for "a" and "company"
 
   return (
-    <div className={`flex items-center gap-2.5 select-none ${className}`} style={{ height: "40px" }} id="connectnav-logo">
-      {/* Sleek navigation & connectivity waypoint SVG icon */}
-      <svg 
-        viewBox="0 0 100 100" 
-        fill="none" 
+    <div className={`inline-flex items-center select-none ${className}`} id="reunert-connect-logo">
+      <svg
+        viewBox="0 0 310 106"
+        fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="h-9 w-9 filter drop-shadow-xs"
+        className="h-12 w-auto"
+        aria-label="Reunert Connect - a Reunert company"
       >
-        {/* Outer glowing orbital path */}
-        <circle 
-          cx="50" 
-          cy="50" 
-          r="42" 
-          stroke={light ? "rgba(45, 212, 191, 0.15)" : "rgba(13, 148, 136, 0.1)"} 
-          strokeWidth="2" 
-          strokeDasharray="4 4"
-        />
-        
-        {/* Connection node lines */}
-        <line x1="50" y1="50" x2="18" y2="35" stroke={light ? "rgba(255,255,255,0.2)" : "rgba(30,41,59,0.15)"} strokeWidth="2" />
-        <line x1="50" y1="50" x2="82" y2="35" stroke={light ? "rgba(255,255,255,0.2)" : "rgba(30,41,59,0.15)"} strokeWidth="2" />
-        <line x1="50" y1="50" x2="50" y2="85" stroke={light ? "rgba(255,255,255,0.2)" : "rgba(30,41,59,0.15)"} strokeWidth="2" />
+        {/* LINE 1: Reunert */}
+        <g id="Reunert-Wordmark">
+          {/* Reu */}
+          <text
+            x="0"
+            y="42"
+            fill={navyColor}
+            fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+            fontSize="48"
+            fontWeight="800"
+            letterSpacing="-1.5px"
+          >
+            Reu
+          </text>
 
-        {/* Dynamic Navigation Triangle Pointer */}
-        <path 
-          d="M 50,15 L 75,55 L 50,45 L 25,55 Z" 
-          fill={light ? "url(#tealGradientLight)" : "url(#tealGradientDark)"} 
-          className="transition-transform duration-300 hover:scale-105"
-        />
+          {/* 'n' with signature Teal Swoosh */}
+          <g transform="translate(91, 0)">
+            <text
+              x="0"
+              y="42"
+              fill={navyColor}
+              fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+              fontSize="48"
+              fontWeight="800"
+              letterSpacing="-1.5px"
+            >
+              n
+            </text>
+            
+            {/* Signature Teal Swoosh cutting the top-left shoulder of 'n' */}
+            <path
+              d="M 0.5 21 C 0.5 11, 4.5 4, 11.5 0 L 11.5 8.5 C 8 11.5 5 15.5 3.5 21.5 Z"
+              fill={tealColor}
+            />
+          </g>
 
-        {/* Peripheral Connection Nodes */}
-        <circle cx="18" cy="35" r="5" fill={light ? lightTeal : brandTeal} />
-        <circle cx="82" cy="35" r="5" fill={light ? lightTeal : brandTeal} />
-        <circle cx="50" cy="85" r="5" fill={light ? textColor : "#475569"} />
-        
-        {/* Center hub node */}
-        <circle cx="50" cy="50" r="3" fill={light ? "#FFFFFF" : "#1E293B"} />
+          {/* ert */}
+          <text
+            x="119"
+            y="42"
+            fill={navyColor}
+            fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+            fontSize="48"
+            fontWeight="800"
+            letterSpacing="-1.5px"
+          >
+            ert
+          </text>
+        </g>
 
-        {/* Gradients */}
-        <defs>
-          <linearGradient id="tealGradientLight" x1="50" y1="15" x2="50" y2="55" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#2DD4BF" />
-            <stop offset="100%" stopColor="#0D9488" />
-          </linearGradient>
-          <linearGradient id="tealGradientDark" x1="50" y1="15" x2="50" y2="55" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#0D9488" />
-            <stop offset="100%" stopColor="#0F766E" />
-          </linearGradient>
-        </defs>
-      </svg>
-
-      {/* Modern, bold typographer brand text */}
-      <div className="flex flex-col justify-center">
-        <div className="flex items-baseline leading-none">
-          <span 
-            className="font-sans font-black tracking-tight" 
-            style={{ 
-              color: textColor, 
-              fontSize: "19px", 
-              fontWeight: 800 
-            }}
+        {/* LINE 2: Connect (indented beneath 'u'/'n') */}
+        <g id="Connect-Wordmark">
+          <text
+            x="96"
+            y="76"
+            fill={tealColor}
+            fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+            fontSize="36"
+            fontWeight="700"
+            letterSpacing="-0.8px"
           >
             Connect
-          </span>
-          <span 
-            className="font-sans font-black tracking-wider ml-0.5" 
-            style={{ 
-              color: light ? lightTeal : brandTeal, 
-              fontSize: "19px", 
-              fontWeight: 900 
-            }}
-          >
-            NAV
-          </span>
-        </div>
-        
-        <span 
-          className="font-mono uppercase tracking-[0.25em] mt-0.5" 
-          style={{ 
-            color: subTextColor, 
-            fontSize: "8.5px", 
-            fontWeight: 700 
-          }}
-        >
-          L2C NAVIGATION
-        </span>
-      </div>
+          </text>
+        </g>
+
+        {/* LINE 3: a Reunert company */}
+        {showSubtitle && (
+          <g id="Subtitle" transform="translate(64, 98)">
+            <text
+              x="0"
+              y="0"
+              fill={mutedColor}
+              fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+              fontSize="13"
+              fontWeight="400"
+            >
+              a
+            </text>
+            <text
+              x="14"
+              y="0"
+              fill={navyColor}
+              fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+              fontSize="13"
+              fontWeight="800"
+            >
+              Reu
+            </text>
+            <text
+              x="42"
+              y="0"
+              fill={navyColor}
+              fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+              fontSize="13"
+              fontWeight="800"
+            >
+              n
+            </text>
+            {/* Mini teal swoosh on mini 'n' */}
+            <path
+              d="M 42.2 -6 C 42.2 -9, 43.5 -11, 45.5 -12 L 45.5 -9.5 C 44.5 -8.5 43.5 -7, 43 -5 Z"
+              fill={tealColor}
+            />
+            <text
+              x="50"
+              y="0"
+              fill={navyColor}
+              fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+              fontSize="13"
+              fontWeight="800"
+            >
+              ert
+            </text>
+            <text
+              x="72"
+              y="0"
+              fill={mutedColor}
+              fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+              fontSize="13"
+              fontWeight="400"
+            >
+              company
+            </text>
+          </g>
+        )}
+      </svg>
     </div>
   );
 }
