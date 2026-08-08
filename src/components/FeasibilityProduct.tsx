@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Lead, FeasibilityStudy, Quotation } from "../types";
+import GoogleEarthSatelliteMap from "./GoogleEarthSatelliteMap";
 import { 
   MapPin, 
   Satellite, 
@@ -217,10 +218,24 @@ export default function FeasibilityProduct({
               </div>
             </div>
 
+            {/* Interactive Google Earth Satellite Map Canvas with Movable Pin */}
+            <div className="pt-2">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
+                <span>Interactive Google Earth 3D Satellite Map & Pin Locator</span>
+                <span className="text-[11px] text-teal-600 font-bold font-mono">Drag pin or click anywhere on map</span>
+              </label>
+              <GoogleEarthSatelliteMap
+                gpsCoordinates={gps}
+                onGpsChange={(newGps) => setGps(newGps)}
+                address={address}
+                isFeasibilityRunning={isFeasibilityRunning}
+              />
+            </div>
+
             <button
               onClick={runFeasibilityCheck}
               disabled={isFeasibilityRunning || !activeLead}
-              className="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 rounded-lg text-xs transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-3 rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-4"
             >
               {isFeasibilityRunning ? (
                 <>
@@ -262,23 +277,6 @@ export default function FeasibilityProduct({
                       <p className="text-[9px] text-slate-500">Latency: {srv.latency} | Lead: {srv.estimatedLeadTime}</p>
                     </div>
                   ))}
-                </div>
-              </div>
-
-              {/* simulated graphic map path */}
-              <div className="relative h-28 bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center text-white border border-slate-800 shadow-inner">
-                <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:14px_24px] pointer-events-none"></div>
-                <div className="absolute top-4 left-1/4 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl animate-pulse"></div>
-                <div className="absolute bottom-4 right-1/4 w-32 h-32 bg-teal-500/10 rounded-full blur-2xl"></div>
-
-                <div className="z-10 text-center space-y-1">
-                  <div className="flex items-center justify-center gap-1.5 text-xs text-emerald-400 font-mono font-bold">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                    GPS MATCHED: {activeFeas.gpsCoordinates}
-                  </div>
-                  <p className="text-[10px] text-slate-400 max-w-sm font-medium">
-                    Google Earth overlay shows fiber terminal node at <span className="text-slate-200">12m</span> from boundary line. Point-to-Point Wireless mast line-of-sight confirmed.
-                  </p>
                 </div>
               </div>
             </div>
