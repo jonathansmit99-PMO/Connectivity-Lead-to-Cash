@@ -280,6 +280,8 @@ export default function App() {
               setFeasibilities={setFeasibilities}
               quotations={quotations}
               setQuotations={setQuotations}
+              occupancies={occupancies}
+              setOccupancies={setOccupancies}
               activePersona={activePersona}
               selectedLeadId={selectedLeadId}
             />

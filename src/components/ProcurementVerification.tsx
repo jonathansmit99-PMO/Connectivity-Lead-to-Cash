@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Lead, Quotation, ProjectCase, OccupancyDocument } from "../types";
 import { 
   ShieldCheck, 
   AlertTriangle, 
   FileCheck, 
   Upload, 
+  Download,
   DollarSign, 
   Activity, 
   FileText, 
@@ -40,6 +41,7 @@ export default function ProcurementVerification({
   const activeLead = leads.find(l => l.id === selectedLeadId) || leads[0];
   const activeQuote = quotations.find(q => q.leadId === activeLead?.id);
   const activeCase = cases.find(c => c.leadId === activeLead?.id);
+  const activeOcc = occupancies.find(o => o.leadId === activeLead?.id);
 
   // Local states
   const [poNumber, setPoNumber] = useState("");
@@ -58,7 +60,94 @@ export default function ProcurementVerification({
     termsAgreed: false,
   });
 
+  // Sync Occupancy local form state
+  useEffect(() => {
+    if (activeOcc) {
+      setOccupancyForm({
+        buildingName: activeOcc.buildingName,
+        onsiteContactName: activeOcc.onsiteContactName,
+        onsiteContactPhone: activeOcc.onsiteContactPhone,
+        onsiteContactEmail: activeOcc.onsiteContactEmail || activeLead?.email || "",
+        landlordName: activeOcc.landlordName,
+        landlordPhone: activeOcc.landlordPhone || "",
+        landlordEmail: activeOcc.landlordEmail,
+        termsAgreed: activeOcc.termsAgreed,
+      });
+      setValidationStatus(activeOcc.gpsValidated ? "validated" : "none");
+    } else {
+      setOccupancyForm({
+        buildingName: activeLead?.companyName ? `${activeLead.companyName} Sandton Campus` : "Rivonia Heights Block C",
+        onsiteContactName: activeLead?.clientName || "Lebo Nkosi",
+        onsiteContactPhone: activeLead?.phone || "+27 82 455 1200",
+        onsiteContactEmail: activeLead?.email || "site.manager@company.co.za",
+        landlordName: "Redefine Properties",
+        landlordPhone: "+27 11 500 8000",
+        landlordEmail: "info@redefine.co.za",
+        termsAgreed: true,
+      });
+      setValidationStatus("none");
+    }
+  }, [activeOcc, activeLead]);
+
   const [validationStatus, setValidationStatus] = useState<"none" | "checking" | "validated">("none");
+
+  const handleDownloadQuote = (quoteToDownload: Quotation) => {
+    const formattedDate = new Date().toLocaleDateString('en-ZA', { year: 'numeric', month: 'long', day: 'numeric' });
+    const content = `
+===================================================================
+                  REUNERT CONNECTIQ COMMERCIAL QUOTATION
+===================================================================
+Reference Number:   ${quoteToDownload.id}
+Date Issued:        ${formattedDate}
+Pricing Validity:   ${quoteToDownload.pricingValidityDays || 30} Days
+
+-------------------------------------------------------------------
+CLIENT & SITE DETAILS
+-------------------------------------------------------------------
+Company Name:       ${activeLead?.companyName || "Client"}
+Contact Person:     ${activeLead?.clientName || activeLead?.primaryBillingContact?.name || "Procurement Officer"}
+Site Address:       ${quoteToDownload.address}
+GPS Coordinates:    ${quoteToDownload.gpsCoordinates}
+
+-------------------------------------------------------------------
+NETWORK & TECHNICAL SPECIFICATIONS
+-------------------------------------------------------------------
+Service Tier:       ${quoteToDownload.networkType || "Fiber Link"}
+Bandwidth:          ${quoteToDownload.bandwidth}
+Contention Ratio:   ${quoteToDownload.contention}
+Network Operator:   ${quoteToDownload.networkOperator}
+Last Mile Provider: ${quoteToDownload.lastMileProvider}
+Contract Term:      ${quoteToDownload.termMonths} Months
+Lead Time:          ${quoteToDownload.leadTimeWeeks} Weeks
+
+-------------------------------------------------------------------
+COMMERCIAL FINANCIAL BREAKDOWN (ZAR)
+-------------------------------------------------------------------
+Non-Recurring Setup Fee (NRC):  R ${quoteToDownload.nrc.toLocaleString()}
+Monthly Recurring Cost (MRC):  R ${quoteToDownload.mrc.toLocaleString()} / month
+Margin Compliance:              ${quoteToDownload.marginPercentage}%
+
+-------------------------------------------------------------------
+TERMS & COMPLIANCE
+-------------------------------------------------------------------
+Status:             ${(quoteToDownload.status || "verified").toUpperCase()}
+Notes:              ${quoteToDownload.notes || "Official quotation verified for procurement."}
+
+Reunert ConnectIQ Telecoms Operations
+Contact: quotes@connectiq.reunert.co.za
+===================================================================
+    `.trim();
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `ConnectIQ_Quotation_${(activeLead?.companyName || "Client").replace(/[^a-zA-Z0-9]/g, '_')}_${quoteToDownload.id}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const handleValidateGPS = () => {
     setValidationStatus("checking");
@@ -66,8 +155,6 @@ export default function ProcurementVerification({
       setValidationStatus("validated");
     }, 1500);
   };
-
-  const activeOcc = occupancies.find(o => o.leadId === activeLead?.id);
 
   const handleSubmitOccupancy = (e: React.FormEvent) => {
     e.preventDefault();
@@ -296,7 +383,17 @@ export default function ProcurementVerification({
                   <TrendingUp className="w-3.5 h-3.5 text-teal-600" />
                   Margin Compliance Dashboard
                 </span>
-                <span className="text-[10px] text-slate-500 font-semibold font-mono">ID: {activeQuote.id}</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleDownloadQuote(activeQuote)}
+                    className="px-2 py-0.5 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 rounded text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                    title="Download Official Quote Document"
+                  >
+                    <Download className="w-3 h-3" />
+                    Download Quote
+                  </button>
+                  <span className="text-[10px] text-slate-500 font-semibold font-mono">ID: {activeQuote.id}</span>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
