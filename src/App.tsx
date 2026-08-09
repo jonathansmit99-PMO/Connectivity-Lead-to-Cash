@@ -166,39 +166,110 @@ export default function App() {
             </div>
           </div>
 
-          {/* Persona selector bar */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-slate-400 font-bold uppercase tracking-wider hidden lg:inline">Active Persona:</span>
-            <div className="bg-slate-800 p-1 rounded-xl border border-slate-700 flex flex-wrap gap-1">
-              {[
-                { name: "Sales / Reseller", role: "Sales Agent" },
-                { name: "Client", role: "Client Signatory" },
-                { name: "Legal / Compliance", role: "Legal Review" },
-                { name: "Legal / Procurement", role: "Procurement" },
-                { name: "Project Manager", role: "Delivery Team" },
-                { name: "Admin", role: "Full View" }
-              ].map(per => (
-                <button
-                  key={per.name}
-                  onClick={() => setActivePersona(per.name)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    activePersona === per.name
-                      ? "bg-teal-600 text-white shadow-xs"
-                      : "text-slate-350 hover:bg-slate-700 hover:text-white"
-                  }`}
-                >
-                  {per.role}
-                </button>
-              ))}
+          {/* End-to-End Process Progress Bar */}
+          <div className="flex flex-col sm:flex-row items-center gap-3 bg-slate-800/80 border border-slate-700/80 rounded-xl px-3.5 py-2 min-w-[280px] sm:min-w-[420px] lg:min-w-[540px]">
+            <div className="flex-1 w-full space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] font-bold">
+                <span className="text-slate-300 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
+                  <span className="text-slate-400 uppercase text-[10px] tracking-wider">Process Progress:</span>
+                  <span className="text-teal-300 font-bold">{
+                    activeTab === "landing" ? "Overview & Landing" :
+                    activeTab === "onboarding" ? "Phase 1: Onboarding Flow" :
+                    activeTab === "feasibility" ? "Phase 2: Feasibility & Quote" :
+                    activeTab === "margin" ? "Phase 3: Margin & Handoff" :
+                    activeTab === "delivery" ? "Phase 4: Connectivity Delivery" :
+                    activeTab === "engineering" ? "Phase 5: Field Engineering" :
+                    activeTab === "support" ? "Phase 6: Support & KAM" :
+                    activeTab === "lifecycle" ? "Phase 7: Contract Lifecycle" : "Executive Visibility"
+                  }</span>
+                </span>
+                <span className="text-teal-400 font-mono font-bold bg-teal-950/80 border border-teal-800/60 px-2 py-0.5 rounded text-[10px]">
+                  {
+                    activeTab === "landing" ? "10%" :
+                    activeTab === "onboarding" ? "25%" :
+                    activeTab === "feasibility" ? "40%" :
+                    activeTab === "margin" ? "55%" :
+                    activeTab === "delivery" ? "70%" :
+                    activeTab === "engineering" ? "82%" :
+                    activeTab === "support" ? "92%" :
+                    activeTab === "lifecycle" ? "100%" : "100%"
+                  } Complete
+                </span>
+              </div>
+
+              {/* Progress Bar Track */}
+              <div className="relative w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-700/60">
+                <div 
+                  className="h-full bg-gradient-to-r from-teal-500 via-emerald-400 to-teal-300 transition-all duration-500 ease-out rounded-full shadow-[0_0_10px_rgba(20,184,166,0.5)]"
+                  style={{
+                    width: 
+                      activeTab === "landing" ? "10%" :
+                      activeTab === "onboarding" ? "25%" :
+                      activeTab === "feasibility" ? "40%" :
+                      activeTab === "margin" ? "55%" :
+                      activeTab === "delivery" ? "70%" :
+                      activeTab === "engineering" ? "82%" :
+                      activeTab === "support" ? "92%" : "100%"
+                  }}
+                />
+              </div>
+
+              {/* Step Quick-Nav Nodes */}
+              <div className="hidden lg:flex items-center justify-between gap-1 pt-0.5">
+                {[
+                  { id: "landing", label: "Landing", pct: 10 },
+                  { id: "onboarding", label: "P1: Onboard", pct: 25 },
+                  { id: "feasibility", label: "P2: Feasibility", pct: 40 },
+                  { id: "margin", label: "P3: Margin", pct: 55 },
+                  { id: "delivery", label: "P4: Delivery", pct: 70 },
+                  { id: "engineering", label: "P5: Engineer", pct: 82 },
+                  { id: "support", label: "P6: Support", pct: 92 },
+                  { id: "lifecycle", label: "P7: Contract", pct: 100 },
+                ].map((phase) => {
+                  const isActive = activeTab === phase.id;
+                  return (
+                    <button
+                      key={phase.id}
+                      onClick={() => setActiveTab(phase.id)}
+                      title={`Jump to ${phase.label} (${phase.pct}%)`}
+                      className={`text-[9px] font-bold font-mono transition-all cursor-pointer px-1 py-0.5 rounded ${
+                        isActive 
+                          ? "text-teal-300 font-extrabold bg-teal-900/60 border border-teal-700/60" 
+                          : "text-slate-400 hover:text-white hover:bg-slate-700/50"
+                      }`}
+                    >
+                      {phase.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            
-            <button
-              onClick={handleResetSystem}
-              title="Reset Database to default mock values"
-              className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg border border-slate-700 transition-colors shrink-0"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-            </button>
+
+            {/* Role Persona Dropdown + Reset Action */}
+            <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+              <select
+                value={activePersona}
+                onChange={(e) => setActivePersona(e.target.value)}
+                className="bg-slate-900 border border-slate-700 text-slate-300 text-[10px] font-bold rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-teal-500 cursor-pointer"
+                title="Active Persona Role"
+              >
+                <option value="Admin">Full View (Admin)</option>
+                <option value="Sales / Reseller">Sales Agent</option>
+                <option value="Client">Client Signatory</option>
+                <option value="Legal / Compliance">Legal Review</option>
+                <option value="Legal / Procurement">Procurement</option>
+                <option value="Project Manager">Delivery Team</option>
+              </select>
+
+              <button
+                onClick={handleResetSystem}
+                title="Reset Database to default mock values"
+                className="p-1.5 bg-slate-700/60 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg border border-slate-600 transition-colors shrink-0 cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </header>
