@@ -138,9 +138,9 @@ export default function LandingPage({ onNavigateTab, activeLeadCompanyName }: La
             Businesses Connected Without Limits.
           </h2>
 
-          {/* Subtitle / Line 3: Aggregating feasibility, communication, smart networking, marketplace. */}
+          {/* Subtitle / Line 3: Feasibility. Communications. Smart Networking. One Marketplace. */}
           <p className="text-base sm:text-lg text-slate-300 font-medium max-w-2xl leading-relaxed">
-            Aggregating feasibility, communication, smart networking, marketplace.
+            Feasibility. Communications. Smart Networking. One Marketplace.
           </p>
 
           {/* Quick CTA Actions */}

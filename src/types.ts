@@ -143,6 +143,12 @@ export interface ProjectCase {
   handoverDocName?: string;
   handoverDocUrl?: string;
   handoverDocUploadedAt?: string;
+  // PM Router Engineer Booking Fields
+  pmRouterEngineerBooked?: boolean;
+  pmRouterEngineerName?: string;
+  pmRouterEngineerRole?: string;
+  pmRouterEngineerDate?: string;
+  pmRouterEngineerNotes?: string;
   // New Phase 5 Booking Fields
   bookingAddress?: string;
   bookingGps?: string;
@@ -151,6 +157,15 @@ export interface ProjectCase {
   bookingContactEmail?: string;
   bookingDateTime?: string;
   bookingEquipment?: string;
+  // Phase 5 Field Engineer Portal Tracking Fields
+  fieldEquipmentCollectedAt?: string;
+  fieldTravelStartedAt?: string;
+  fieldTravelArrivedAt?: string;
+  fieldTravelDurationMins?: number;
+  fieldActivationStartedAt?: string;
+  fieldActivationCompletedAt?: string;
+  fieldActivationDurationMins?: number;
+  fieldChatMessages?: Array<{ id: string; sender: 'field' | 'remote'; text: string; timestamp: string }>;
   // Phase 5 Field Engineer Action Fields
   fieldArrivedAt?: string;
   fieldDoneAt?: string;

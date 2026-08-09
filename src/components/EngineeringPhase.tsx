@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Lead, ProjectCase, Quotation } from "../types";
 import { 
   Server, 
   MapPin, 
   Phone, 
+  PhoneCall,
+  PhoneOff,
   Cpu, 
   Activity, 
   Wifi, 
@@ -17,7 +19,19 @@ import {
   FileCheck, 
   Send,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Truck,
+  PackageCheck,
+  MessageSquare,
+  Mic,
+  MicOff,
+  Volume2,
+  Play,
+  Timer,
+  Sparkles,
+  RefreshCw,
+  Radio,
+  UserCheck
 } from "lucide-react";
 
 interface EngineeringPhaseProps {
@@ -52,6 +66,23 @@ export default function EngineeringPhase({
 
   const [isBookingSaved, setIsBookingSaved] = useState(!!activeCase?.bookingAddress);
 
+  // Project Manager - Router Configuration Engineer Booking states
+  const [pmEngineerName, setPmEngineerName] = useState(activeCase?.pmRouterEngineerName || "Sipho Dlamini - Lead Core Network Specialist");
+  const [pmEngineerRole, setPmEngineerRole] = useState(activeCase?.pmRouterEngineerRole || "Core WAN & BGP SFP Router Specialist");
+  const [pmEngineerDate, setPmEngineerDate] = useState(activeCase?.pmRouterEngineerDate || "2026-07-09T14:00");
+  const [pmEngineerNotes, setPmEngineerNotes] = useState(activeCase?.pmRouterEngineerNotes || "Pre-configure Dual SFP+ WAN redundancy, static IP allocations, and QoS voice prior to field dispatch.");
+  const [isPmEngineerBooked, setIsPmEngineerBooked] = useState(!!activeCase?.pmRouterEngineerBooked);
+
+  // Field Service Engineer Portal - Detailed Time Tracking States
+  const [equipmentCollectedAt, setEquipmentCollectedAt] = useState(activeCase?.fieldEquipmentCollectedAt || "");
+  const [travelStartedAt, setTravelStartedAt] = useState(activeCase?.fieldTravelStartedAt || "");
+  const [travelArrivedAt, setTravelArrivedAt] = useState(activeCase?.fieldTravelArrivedAt || activeCase?.fieldArrivedAt || "");
+  const [travelMins, setTravelMins] = useState<number | undefined>(activeCase?.fieldTravelDurationMins || (activeCase?.fieldArrivedAt ? 35 : undefined));
+  
+  const [activationStartedAt, setActivationStartedAt] = useState(activeCase?.fieldActivationStartedAt || "");
+  const [activationCompletedAt, setActivationCompletedAt] = useState(activeCase?.fieldActivationCompletedAt || activeCase?.fieldDoneAt || "");
+  const [activationMins, setActivationMins] = useState<number | undefined>(activeCase?.fieldActivationDurationMins || (activeCase?.fieldDoneAt ? 42 : undefined));
+
   // Field Service Engineer Action states
   const [arrivalTime, setArrivalTime] = useState(activeCase?.fieldArrivedAt || "");
   const [doneTime, setDoneTime] = useState(activeCase?.fieldDoneAt || "");
@@ -65,6 +96,45 @@ export default function EngineeringPhase({
   // Client sign-off states
   const [signName, setSignName] = useState(activeCase?.fieldClientSignName || "");
   const [isFieldSigned, setIsFieldSigned] = useState(activeCase?.fieldClientSignedOff || false);
+
+  // Field <-> Remote Communication Hub States (Chat & Voice Call)
+  const [commTab, setCommTab] = useState<"chat" | "call">("chat");
+  const [chatMessages, setChatMessages] = useState<Array<{ id: string; sender: 'field' | 'remote'; text: string; timestamp: string }>>(
+    activeCase?.fieldChatMessages || [
+      {
+        id: "m1",
+        sender: "remote",
+        text: `Hello Field Engineer! Sipho here from NOC Remote Eng. I have pre-allocated VLAN ${activeCase?.remoteVlanId || 1042} for ${activeLead?.companyName}. Please log equipment collection and notify me when you arrive onsite.`,
+        timestamp: "08:10 AM"
+      }
+    ]
+  );
+  const [chatInput, setChatInput] = useState("");
+  const [isRemoteTyping, setIsRemoteTyping] = useState(false);
+
+  // Voice Call States
+  const [isCallActive, setIsCallActive] = useState(false);
+  const [callTimer, setCallTimer] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isSpeakerOn, setIsSpeakerOn] = useState(true);
+  const [transcripts, setTranscripts] = useState<Array<{ speaker: string; text: string; time: string }>>([
+    { speaker: "NOC Remote Eng (Sipho)", text: "Radio voice bridge active on NOC SIP Channel #402.", time: "00:02" },
+    { speaker: "Field Technician", text: "Connected SFP+ transceiver to primary fiber patch. Light levels look stable.", time: "00:15" },
+    { speaker: "NOC Remote Eng (Sipho)", text: "Pinging core gateway interface now. Subnet route /29 bound.", time: "00:28" }
+  ]);
+
+  // Call timer effect
+  useEffect(() => {
+    let interval: any;
+    if (isCallActive) {
+      interval = setInterval(() => {
+        setCallTimer(prev => prev + 1);
+      }, 1000);
+    } else {
+      setCallTimer(0);
+    }
+    return () => clearInterval(interval);
+  }, [isCallActive]);
 
   // Remote Network Engineer States
   const [dataCentreVlan, setDataCentreVlan] = useState(activeCase?.remoteVlanId || 1042);
@@ -131,6 +201,18 @@ export default function EngineeringPhase({
     }));
   };
 
+  const handleSavePmEngineerBooking = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateCase({
+      pmRouterEngineerBooked: true,
+      pmRouterEngineerName: pmEngineerName,
+      pmRouterEngineerRole: pmEngineerRole,
+      pmRouterEngineerDate: pmEngineerDate,
+      pmRouterEngineerNotes: pmEngineerNotes
+    });
+    setIsPmEngineerBooked(true);
+  };
+
   const handleSaveBooking = (e: React.FormEvent) => {
     e.preventDefault();
     updateCase({
@@ -145,16 +227,101 @@ export default function EngineeringPhase({
     setIsBookingSaved(true);
   };
 
-  const handleRecordArrival = () => {
+  const handleLogEquipmentCollection = () => {
     const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    setEquipmentCollectedAt(timestamp);
+    updateCase({ fieldEquipmentCollectedAt: timestamp });
+  };
+
+  const handleStartTravel = () => {
+    const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    setTravelStartedAt(timestamp);
+    updateCase({ fieldTravelStartedAt: timestamp });
+  };
+
+  const handleArriveSite = () => {
+    const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    setTravelArrivedAt(timestamp);
     setArrivalTime(timestamp);
-    updateCase({ fieldArrivedAt: timestamp });
+    const mins = 35;
+    setTravelMins(mins);
+    updateCase({ 
+      fieldTravelArrivedAt: timestamp, 
+      fieldArrivedAt: timestamp,
+      fieldTravelDurationMins: mins 
+    });
+  };
+
+  const handleStartActivation = () => {
+    const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    setActivationStartedAt(timestamp);
+    updateCase({ fieldActivationStartedAt: timestamp });
+  };
+
+  const handleCompleteActivation = () => {
+    const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    setActivationCompletedAt(timestamp);
+    setDoneTime(timestamp);
+    const mins = 42;
+    setActivationMins(mins);
+    updateCase({ 
+      fieldActivationCompletedAt: timestamp, 
+      fieldDoneAt: timestamp,
+      fieldActivationDurationMins: mins 
+    });
+  };
+
+  const handleSendChatMessage = (presetText?: string) => {
+    const text = presetText || chatInput;
+    if (!text.trim()) return;
+
+    const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const userMsg = {
+      id: `msg-${Date.now()}`,
+      sender: "field" as const,
+      text: text.trim(),
+      timestamp: timeStr
+    };
+
+    const updated = [...chatMessages, userMsg];
+    setChatMessages(updated);
+    if (!presetText) setChatInput("");
+    setIsRemoteTyping(true);
+
+    setTimeout(() => {
+      let replyText = `NOC Eng (Sipho): Acknowledged. Core router parameters updated. VLAN ${dataCentreVlan} reporting 0% packet loss.`;
+      const lower = text.toLowerCase();
+      if (lower.includes("light") || lower.includes("optical") || lower.includes("power")) {
+        replyText = `NOC Eng (Sipho): Optical RX power verified at -18.4 dBm (Optimal). Primary SFP transceiver link state: UP!`;
+      } else if (lower.includes("bgp") || lower.includes("ping") || lower.includes("route")) {
+        replyText = `NOC Eng (Sipho): BGP Neighbor 196.15.52.1 ESTABLISHED. Subnet route /29 bound successfully.`;
+      } else if (lower.includes("speed") || lower.includes("bandwidth")) {
+        replyText = `NOC Eng (Sipho): Unlocked line speed profile to full ${speedMetric}. Go ahead and complete speed test verification.`;
+      } else if (lower.includes("firmware") || lower.includes("vlan") || lower.includes("config")) {
+        replyText = `NOC Eng (Sipho): Config pushed! Router ${selectedEquipment} flashed with production firmware v5.12.`;
+      }
+
+      const remoteMsg = {
+        id: `msg-${Date.now() + 1}`,
+        sender: "remote" as const,
+        text: replyText,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      };
+      setChatMessages(prev => {
+        const finalMsgs = [...prev, remoteMsg];
+        updateCase({ fieldChatMessages: finalMsgs });
+        return finalMsgs;
+      });
+      setIsRemoteTyping(false);
+    }, 1000);
+  };
+
+  const handleRecordArrival = () => {
+    handleArriveSite();
   };
 
   const handleRecordDone = () => {
-    const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    setDoneTime(timestamp);
-    updateCase({ fieldDoneAt: timestamp });
+    handleCompleteActivation();
   };
 
   const handleFieldSignOff = (e: React.FormEvent) => {
@@ -239,20 +406,161 @@ export default function EngineeringPhase({
         </div>
       </div>
 
-      {/* Booking and Dispatch Setup (Shared entry) */}
+      {/* SECTION 1: Project Manager Router Configuration Engineer Booking */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4" id="pm-router-booking-section">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
+          <div className="flex items-center gap-2.5">
+            <Cpu className="w-5 h-5 text-indigo-600" />
+            <div>
+              <h3 className="font-sans font-bold text-slate-800 text-sm flex items-center gap-2">
+                1. Router Configuration Engineer Booking
+                <span className="text-[10px] bg-indigo-50 text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded font-mono font-bold">
+                  Project Manager Role
+                </span>
+              </h3>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                The Project Manager books a lead engineer to pre-configure and flash customer premises router firmware &amp; routing protocols prior to field dispatch.
+              </p>
+            </div>
+          </div>
+          {isPmEngineerBooked && (
+            <span className="text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full font-bold flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Engineer Booked ✓
+            </span>
+          )}
+        </div>
+
+        {isPmEngineerBooked ? (
+          <div className="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-4 text-xs space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2 font-bold text-indigo-950">
+                <CheckCircle className="w-4 h-4 text-indigo-600" />
+                Router Configuration Engineer Allocated
+              </div>
+              <button 
+                onClick={() => setIsPmEngineerBooked(false)}
+                className="text-[10px] text-indigo-700 hover:text-indigo-950 font-bold hover:underline cursor-pointer"
+              >
+                Modify Engineer Booking
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2 border-t border-indigo-100 text-[11px]">
+              <div>
+                <span className="text-slate-400 font-semibold block text-[10px] uppercase">Assigned Engineer:</span>
+                <p className="font-bold text-indigo-950 mt-0.5">{pmEngineerName}</p>
+              </div>
+              <div>
+                <span className="text-slate-400 font-semibold block text-[10px] uppercase">Configuration Specialty:</span>
+                <p className="font-bold text-slate-800 mt-0.5">{pmEngineerRole}</p>
+              </div>
+              <div>
+                <span className="text-slate-400 font-semibold block text-[10px] uppercase">Scheduled Config Date:</span>
+                <p className="font-bold text-slate-800 mt-0.5">{new Date(pmEngineerDate).toLocaleString()}</p>
+              </div>
+              <div>
+                <span className="text-slate-400 font-semibold block text-[10px] uppercase">Target Equipment:</span>
+                <p className="font-mono font-bold text-indigo-900 mt-0.5">{selectedEquipment}</p>
+              </div>
+            </div>
+
+            {pmEngineerNotes && (
+              <div className="pt-2 border-t border-indigo-100/60 text-[11px]">
+                <span className="text-slate-400 font-semibold block text-[10px] uppercase">Configuration Scope / Instructions:</span>
+                <p className="text-slate-700 font-medium italic mt-0.5 bg-white/70 p-2 rounded border border-indigo-100">{pmEngineerNotes}</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <form onSubmit={handleSavePmEngineerBooking} className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="block text-[11px] font-bold text-slate-500 uppercase">Assigned Router Configuration Engineer *</label>
+              <select
+                value={pmEngineerName}
+                onChange={(e) => setPmEngineerName(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+              >
+                <option value="Sipho Dlamini - Lead Core Network Specialist">Sipho Dlamini - Lead Core Network Specialist</option>
+                <option value="Jonathan Vance - Senior Router Systems Engineer">Jonathan Vance - Senior Router Systems Engineer</option>
+                <option value="Thabo Mokoena - Enterprise Hardware Specialist">Thabo Mokoena - Enterprise Hardware Specialist</option>
+                <option value="Nandi Ndlovu - Tier 3 Technical Specialist">Nandi Ndlovu - Tier 3 Technical Specialist</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-bold text-slate-500 uppercase">Configuration Specialty / Role *</label>
+              <input
+                type="text"
+                required
+                value={pmEngineerRole}
+                onChange={(e) => setPmEngineerRole(e.target.value)}
+                placeholder="e.g. Core WAN & BGP SFP Router Specialist"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-bold text-slate-500 uppercase">Config Booking Date &amp; Time *</label>
+              <input
+                type="datetime-local"
+                required
+                value={pmEngineerDate}
+                onChange={(e) => setPmEngineerDate(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="block text-[11px] font-bold text-slate-500 uppercase">Target Equipment to Pre-Configure *</label>
+              <select
+                value={selectedEquipment}
+                onChange={(e) => setSelectedEquipment(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+              >
+                <option value="Reunert Enterprise Core RT-500">Reunert Enterprise Core RT-500 (Dual Wan SFP+)</option>
+                <option value="Cisco Catalyst 9300 Edge">Cisco Catalyst 9300 Edge Router (Multi-Gig)</option>
+                <option value="Huawei NetEngine AR6120">Huawei NetEngine AR6120 Enterprise Gateway</option>
+                <option value="MikroTik CCR2004 Core">MikroTik CCR2004 Core Router (Ultra Latency)</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5 md:col-span-3">
+              <label className="block text-[11px] font-bold text-slate-500 uppercase">Configuration Scope &amp; Special Instructions</label>
+              <input
+                type="text"
+                value={pmEngineerNotes}
+                onChange={(e) => setPmEngineerNotes(e.target.value)}
+                placeholder="e.g. Flash latest firmware v5.12, static IP routing table, and QoS prioritization"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="md:col-span-3 pt-2">
+              <button
+                type="submit"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all cursor-pointer shadow-xs"
+              >
+                Confirm PM Booking: Allocate Router Configuration Engineer
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+
+      {/* SECTION 2: Field Engineer Service Dispatch Booking */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4" id="service-booking-section">
         <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
           <MapPin className="w-5 h-5 text-teal-600" />
-          <h3 className="font-sans font-bold text-slate-800 text-sm">1. Field Engineer Service Dispatch Booking</h3>
+          <h3 className="font-sans font-bold text-slate-800 text-sm">2. Field Engineer Service Dispatch Booking</h3>
         </div>
 
         {isBookingSaved ? (
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <span className="font-bold text-slate-700">✓ Field Technician Scheduled & Confirmed</span>
+              <span className="font-bold text-slate-700">✓ Field Technician Scheduled &amp; Confirmed</span>
               <button 
                 onClick={() => setIsBookingSaved(false)}
-                className="text-[10px] text-teal-700 hover:text-teal-900 font-bold hover:underline"
+                className="text-[10px] text-teal-700 hover:text-teal-900 font-bold hover:underline cursor-pointer"
               >
                 Modify Booking
               </button>
@@ -333,7 +641,7 @@ export default function EngineeringPhase({
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-bold text-slate-500 uppercase">Dispatch Date & Time *</label>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase">Dispatch Date &amp; Time *</label>
               <input
                 type="datetime-local"
                 required
@@ -359,9 +667,9 @@ export default function EngineeringPhase({
             <div className="md:col-span-3 pt-2">
               <button
                 type="submit"
-                className="w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all"
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all cursor-pointer shadow-xs"
               >
-                Confirm Dispatch Schedule & Allocate Router
+                Confirm Dispatch Schedule &amp; Allocate Router
               </button>
             </div>
           </form>
@@ -370,49 +678,374 @@ export default function EngineeringPhase({
 
       {/* Split Dual Workspaces: Left = Onsite Field Engineer, Right = Remote Core Engineer */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8" id="split-engineering-workspace">
-        
-        {/* LEFT COLUMN: FIELD ENGINEER WORKSPACE */}
+             {/* LEFT COLUMN: FIELD ENGINEER WORKSPACE */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-6" id="field-engineer-column">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <span className="p-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-xs font-black">ONSITE</span>
-              <h3 className="font-sans font-bold text-slate-800 text-sm">Field Service Engineer Portal</h3>
+              <span className="px-2 py-0.5 bg-amber-500 text-white rounded-md text-[10px] font-black tracking-wider uppercase">
+                ONSITE PORTAL
+              </span>
+              <div>
+                <h3 className="font-sans font-bold text-slate-800 text-sm">Field Service Engineer Portal</h3>
+                <p className="text-[10px] text-slate-400">Assigned Tech: <strong className="text-slate-700">{pmEngineerName.split(' - ')[0]}</strong> | Ticket #FE-{activeCase.id.toUpperCase()}</p>
+              </div>
             </div>
-            <Wifi className="w-4 h-4 text-slate-400 animate-pulse" />
+            <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full text-[10px] font-bold">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+              Field Active
+            </div>
           </div>
 
           {!isBookingSaved ? (
             <p className="text-xs text-slate-400 italic">Please schedule the Service Dispatch booking first to initialize the Field Engineer portal.</p>
           ) : (
             <div className="space-y-6">
-              
-              {/* Timestamp arrive */}
-              <div className="space-y-3 p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-slate-600 flex items-center gap-1">
-                    <Clock className="w-4 h-4 text-slate-400" />
-                    Technician Arrival Logging
+
+              {/* SECTION 1: Service Lifecycle SLA Time Tracker */}
+              <div className="bg-slate-900 text-white rounded-2xl p-4 space-y-4 shadow-md border border-slate-800">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-amber-400" />
+                    <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Service Dispatch Time Tracking</h4>
+                  </div>
+                  <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-mono font-bold">
+                    SLA Tracker
                   </span>
-                  {arrivalTime && (
-                    <span className="text-[10px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-100 px-2 py-0.5 rounded">
-                      Arrived: {arrivalTime}
-                    </span>
-                  )}
                 </div>
-                {!arrivalTime ? (
-                  <button
-                    type="button"
-                    onClick={handleRecordArrival}
-                    className="w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2 rounded-xl transition-all"
-                  >
-                    Log Arrival Timestamp
-                  </button>
-                ) : (
-                  <p className="text-[11px] text-slate-500 font-medium">Engineer arrived onsite. Physical rack mounts and power cables secured.</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  
+                  {/* Step A: Equipment Collection */}
+                  <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-bold text-amber-300 flex items-center gap-1">
+                        <PackageCheck className="w-3.5 h-3.5" /> 1. Equipment
+                      </span>
+                      {equipmentCollectedAt && (
+                        <span className="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">
+                          {equipmentCollectedAt}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-400">Collect router &amp; SFP transceivers from warehouse.</p>
+                    {!equipmentCollectedAt ? (
+                      <button
+                        type="button"
+                        onClick={handleLogEquipmentCollection}
+                        className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-[10px] py-1.5 rounded-lg transition-all cursor-pointer"
+                      >
+                        Log Collection Time
+                      </button>
+                    ) : (
+                      <div className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Equipment Secured
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Step B: Travel to Site */}
+                  <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-bold text-sky-300 flex items-center gap-1">
+                        <Truck className="w-3.5 h-3.5" /> 2. Site Travel
+                      </span>
+                      {travelMins && (
+                        <span className="text-[9px] font-mono font-bold bg-sky-500/20 text-sky-300 px-1.5 py-0.5 rounded">
+                          {travelMins} mins
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-slate-400 space-y-0.5">
+                      {travelStartedAt && <div>En route: <span className="text-slate-200 font-mono">{travelStartedAt}</span></div>}
+                      {travelArrivedAt && <div>Arrived: <span className="text-slate-200 font-mono">{travelArrivedAt}</span></div>}
+                    </div>
+
+                    {!travelStartedAt ? (
+                      <button
+                        type="button"
+                        onClick={handleStartTravel}
+                        className="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold text-[10px] py-1.5 rounded-lg transition-all cursor-pointer"
+                      >
+                        Start Travel En Route
+                      </button>
+                    ) : !travelArrivedAt ? (
+                      <button
+                        type="button"
+                        onClick={handleArriveSite}
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] py-1.5 rounded-lg transition-all cursor-pointer"
+                      >
+                        Log Arrival Onsite
+                      </button>
+                    ) : (
+                      <div className="text-[10px] text-sky-300 font-medium flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Arrived Onsite ({travelMins}m travel)
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Step C: Service Activation Duration */}
+                  <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-bold text-teal-300 flex items-center gap-1">
+                        <Timer className="w-3.5 h-3.5" /> 3. Activation
+                      </span>
+                      {activationMins && (
+                        <span className="text-[9px] font-mono font-bold bg-teal-500/20 text-teal-300 px-1.5 py-0.5 rounded">
+                          {activationMins} mins
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-slate-400 space-y-0.5">
+                      {activationStartedAt && <div>Start: <span className="text-slate-200 font-mono">{activationStartedAt}</span></div>}
+                      {activationCompletedAt && <div>Done: <span className="text-slate-200 font-mono">{activationCompletedAt}</span></div>}
+                    </div>
+
+                    {!activationStartedAt ? (
+                      <button
+                        type="button"
+                        onClick={handleStartActivation}
+                        disabled={!travelArrivedAt}
+                        className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold text-[10px] py-1.5 rounded-lg transition-all cursor-pointer disabled:opacity-40"
+                      >
+                        Start Service Activation
+                      </button>
+                    ) : !activationCompletedAt ? (
+                      <button
+                        type="button"
+                        onClick={handleCompleteActivation}
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] py-1.5 rounded-lg transition-all cursor-pointer"
+                      >
+                        Complete Service Activation
+                      </button>
+                    ) : (
+                      <div className="text-[10px] text-emerald-300 font-medium flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Activated ({activationMins}m duration)
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+
+                {/* KPI Summary Strip */}
+                {(travelMins || activationMins) && (
+                  <div className="pt-2 border-t border-slate-800 grid grid-cols-3 text-center text-[10px] text-slate-300 font-mono">
+                    <div>
+                      <span className="text-slate-500 block text-[9px]">TRAVEL TIME</span>
+                      <strong className="text-sky-400">{travelMins || 0} mins</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[9px]">ACTIVATION DURATION</span>
+                      <strong className="text-teal-400">{activationMins || 0} mins</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[9px]">TOTAL FIELD SLA TIME</span>
+                      <strong className="text-amber-300">{(travelMins || 0) + (activationMins || 0)} mins</strong>
+                    </div>
+                  </div>
                 )}
               </div>
 
-              {/* Physical Checklists */}
+              {/* SECTION 2: Communication Hub with Remote NOC Engineer */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Radio className="w-4 h-4 text-indigo-600 animate-pulse" />
+                    <h4 className="text-xs font-bold text-slate-800">Remote Network Engineer Direct Bridge</h4>
+                  </div>
+
+                  <div className="flex bg-slate-200 p-0.5 rounded-lg text-[10px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setCommTab("chat")}
+                      className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${commTab === "chat" ? "bg-white text-indigo-900 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
+                    >
+                      <MessageSquare className="w-3 h-3 inline mr-1" />
+                      Live Chat
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCommTab("call")}
+                      className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${commTab === "call" ? "bg-indigo-600 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"}`}
+                    >
+                      <PhoneCall className="w-3 h-3 inline mr-1" />
+                      Voice Call {isCallActive && `(${Math.floor(callTimer / 60)}:${(callTimer % 60).toString().padStart(2, '0')})`}
+                    </button>
+                  </div>
+                </div>
+
+                {commTab === "chat" ? (
+                  /* LIVE CHAT INTERFACE */
+                  <div className="space-y-3">
+                    <div className="bg-white border border-slate-200 rounded-xl p-3 h-48 overflow-y-auto space-y-2.5 text-xs">
+                      {chatMessages.map(msg => (
+                        <div 
+                          key={msg.id}
+                          className={`flex flex-col ${msg.sender === "field" ? "items-end" : "items-start"}`}
+                        >
+                          <div className="flex items-center gap-1 text-[9px] text-slate-400 mb-0.5">
+                            <span className="font-bold text-slate-600">{msg.sender === "field" ? "Field Technician (Onsite)" : "Remote NOC Eng (Sipho)"}</span>
+                            <span>• {msg.timestamp}</span>
+                          </div>
+                          <div 
+                            className={`max-w-[85%] p-2.5 rounded-xl text-[11px] leading-relaxed ${
+                              msg.sender === "field" 
+                                ? "bg-indigo-600 text-white rounded-tr-none" 
+                                : "bg-slate-100 text-slate-800 border border-slate-200 rounded-tl-none"
+                            }`}
+                          >
+                            {msg.text}
+                          </div>
+                        </div>
+                      ))}
+
+                      {isRemoteTyping && (
+                        <div className="flex items-center gap-1.5 text-slate-400 text-[10px] italic pt-1">
+                          <Loader2 className="w-3 h-3 animate-spin text-indigo-600" />
+                          Remote NOC Engineer is typing diagnostics...
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Quick Preset Action Prompts */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[10px]">
+                      <span className="text-slate-400 font-bold shrink-0">Quick Prompts:</span>
+                      <button
+                        type="button"
+                        onClick={() => handleSendChatMessage("Check optical light power levels on SFP port 1")}
+                        className="bg-white border border-slate-200 text-slate-700 hover:bg-indigo-50 hover:text-indigo-900 px-2 py-1 rounded-lg shrink-0 cursor-pointer font-medium"
+                      >
+                        ⚡ Light Levels
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSendChatMessage("Please verify BGP peer route handshake status")}
+                        className="bg-white border border-slate-200 text-slate-700 hover:bg-indigo-50 hover:text-indigo-900 px-2 py-1 rounded-lg shrink-0 cursor-pointer font-medium"
+                      >
+                        🛰️ BGP Sync
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSendChatMessage("Push latest router firmware v5.12 configuration")}
+                        className="bg-white border border-slate-200 text-slate-700 hover:bg-indigo-50 hover:text-indigo-900 px-2 py-1 rounded-lg shrink-0 cursor-pointer font-medium"
+                      >
+                        🔑 Push Config
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSendChatMessage("Unlock bandwidth profile for speed testing")}
+                        className="bg-white border border-slate-200 text-slate-700 hover:bg-indigo-50 hover:text-indigo-900 px-2 py-1 rounded-lg shrink-0 cursor-pointer font-medium"
+                      >
+                        🚀 Speed Unlock
+                      </button>
+                    </div>
+
+                    {/* Chat Input */}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleSendChatMessage()}
+                        placeholder="Message Remote Core Engineer (Sipho Dlamini)..."
+                        className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleSendChatMessage()}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-xl cursor-pointer"
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* VOICE CALL INTERFACE */
+                  <div className="bg-slate-900 text-white rounded-xl p-4 space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-2 rounded-full ${isCallActive ? "bg-emerald-500/20 text-emerald-400 animate-pulse" : "bg-slate-800 text-slate-400"}`}>
+                          <PhoneCall className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h5 className="font-bold text-xs">VoIP SIP Line #402 — NOC Engineering Desk</h5>
+                          <p className="text-[10px] text-slate-400">Connected to: Sipho Dlamini (Senior Core Engineer)</p>
+                        </div>
+                      </div>
+
+                      {isCallActive && (
+                        <div className="text-right">
+                          <span className="text-[10px] font-mono text-emerald-400 font-bold block">
+                            {Math.floor(callTimer / 60).toString().padStart(2, '0')}:{(callTimer % 60).toString().padStart(2, '0')}
+                          </span>
+                          <span className="text-[8px] uppercase tracking-widest text-slate-400">Encrypted HD Voice</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Audio Equalizer Waveform simulation when call active */}
+                    {isCallActive && (
+                      <div className="flex items-center justify-center gap-1 py-2 bg-slate-950/60 rounded-xl border border-slate-800">
+                        <span className="w-1 h-3 bg-indigo-500 rounded-full animate-bounce" />
+                        <span className="w-1 h-6 bg-teal-400 rounded-full animate-bounce [animation-delay:0.1s]" />
+                        <span className="w-1 h-4 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                        <span className="w-1 h-8 bg-emerald-400 rounded-full animate-bounce [animation-delay:0.3s]" />
+                        <span className="w-1 h-5 bg-teal-500 rounded-full animate-bounce [animation-delay:0.15s]" />
+                        <span className="text-xs text-slate-300 font-mono ml-2">HD Voice Active • 24kbps Opus Codec</span>
+                      </div>
+                    )}
+
+                    {/* Live Transcript Stream */}
+                    <div className="bg-slate-950/80 rounded-xl p-3 max-h-32 overflow-y-auto space-y-1.5 text-[10px]">
+                      <span className="text-slate-500 uppercase tracking-wider font-bold block text-[9px]">Live Voice Transcript Stream</span>
+                      {transcripts.map((t, idx) => (
+                        <div key={idx} className="flex gap-1.5 leading-tight">
+                          <span className="text-indigo-400 font-bold shrink-0">{t.speaker} [{t.time}]:</span>
+                          <span className="text-slate-300">{t.text}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Call Control Buttons */}
+                    <div className="flex items-center justify-center gap-3 pt-1">
+                      {!isCallActive ? (
+                        <button
+                          type="button"
+                          onClick={() => setIsCallActive(true)}
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-6 py-2 rounded-xl flex items-center gap-2 transition-all cursor-pointer"
+                        >
+                          <PhoneCall className="w-4 h-4" /> Start Direct Voice Call
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setIsMuted(!isMuted)}
+                            className={`p-2.5 rounded-xl border transition-all cursor-pointer ${isMuted ? "bg-amber-500/20 text-amber-300 border-amber-500/40" : "bg-slate-800 text-slate-300 border-slate-700"}`}
+                          >
+                            {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setIsSpeakerOn(!isSpeakerOn)}
+                            className={`p-2.5 rounded-xl border transition-all cursor-pointer ${isSpeakerOn ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/40" : "bg-slate-800 text-slate-300 border-slate-700"}`}
+                          >
+                            <Volume2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setIsCallActive(false)}
+                            className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-5 py-2 rounded-xl flex items-center gap-2 transition-all cursor-pointer"
+                          >
+                            <PhoneOff className="w-4 h-4" /> End Call
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* SECTION 3: Physical Checklists */}
               <div className="space-y-3.5">
                 <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Physical Line Test Checklist</h4>
                 
@@ -491,33 +1124,6 @@ export default function EngineeringPhase({
                 </div>
               </div>
 
-              {/* Completion Timestamp */}
-              <div className="space-y-3 p-4 bg-slate-50/50 rounded-2xl border border-slate-100">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-slate-600 flex items-center gap-1">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    Task Completion Logs
-                  </span>
-                  {doneTime && (
-                    <span className="text-[10px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-100 px-2 py-0.5 rounded">
-                      Done At: {doneTime}
-                    </span>
-                  )}
-                </div>
-                {!doneTime ? (
-                  <button
-                    type="button"
-                    onClick={handleRecordDone}
-                    disabled={!arrivalTime}
-                    className="w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2 rounded-xl transition-all disabled:opacity-50"
-                  >
-                    Set Completion Timestamp
-                  </button>
-                ) : (
-                  <p className="text-[11px] text-slate-500 font-medium">Engineering physical link-up and speed configuration completed.</p>
-                )}
-              </div>
-
               {/* Client Signoff */}
               <div className="p-4 border border-slate-150 rounded-2xl space-y-4">
                 <div className="flex items-center gap-1.5">
@@ -527,7 +1133,7 @@ export default function EngineeringPhase({
 
                 {isFieldSigned ? (
                   <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs text-emerald-800 font-medium">
-                    ✓ Confirmed & signed off by client <strong>{activeCase.fieldClientSignName}</strong> on {activeCase.fieldClientSignDate || new Date().toLocaleDateString()}.
+                    ✓ Confirmed &amp; signed off by client <strong>{activeCase.fieldClientSignName}</strong> on {activeCase.fieldClientSignDate || new Date().toLocaleDateString()}.
                     <p className="text-[10px] text-emerald-600 mt-1">"I hereby verify that all ordered services are fully functional, speeds are tested and validated within contracted scope."</p>
                   </div>
                 ) : (
@@ -548,8 +1154,8 @@ export default function EngineeringPhase({
                     </div>
                     <button
                       type="submit"
-                      disabled={!doneTime || !signName}
-                      className="w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 rounded-xl transition-all disabled:opacity-50"
+                      disabled={!activationCompletedAt || !signName}
+                      className="w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 rounded-xl transition-all cursor-pointer disabled:opacity-50"
                     >
                       Authenticate Digital Sign-off
                     </button>
