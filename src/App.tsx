@@ -225,7 +225,7 @@ export default function App() {
       <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex-1 flex flex-col gap-6">
         <div className="flex flex-wrap gap-2 pb-3 border-b border-slate-200">
           {[
-            { id: "landing", label: "Phase 1: ConnectIQ Landing", icon: Sparkles },
+            { id: "landing", label: "ConnectIQ Landing", icon: Sparkles },
             { id: "onboarding", label: "Phase 1: Onboarding Flow", icon: Building },
             { id: "feasibility", label: "Phase 2: Feasibility & Quote", icon: MapPin },
             { id: "margin", label: "Phase 3: Margin & Handoff", icon: ClipboardCheck },

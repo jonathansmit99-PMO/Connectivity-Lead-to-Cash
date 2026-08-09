@@ -118,8 +118,60 @@ export default function FeasibilityProduct({
     serviceType: "enterprise" as "broadband" | "premium" | "enterprise",
     bandwidth: "200 Mbps",
     term: "24" as "12" | "24" | "36",
-    vendor: "Fibre Com Connect"
+    vendor: "Reunert Fibre"
   });
+
+  // Additional Products & Value-Added Bundles State
+  const [selectedAddons, setSelectedAddons] = useState<{
+    security: string[];
+    voiceCloud: string[];
+    pabx: string[];
+    telephones: string[];
+  }>({
+    security: ["Next-Gen Enterprise Firewall (UTM)"],
+    voiceCloud: ["SIP Trunk & Voice Channels"],
+    pabx: [],
+    telephones: ["Standard IP Office Desk Phone"]
+  });
+
+  const addonPrices: Record<string, number> = {
+    "Next-Gen Enterprise Firewall (UTM)": 1800,
+    "Anti-DDoS Scrubbing & Mitigation": 950,
+    "Endpoint Threat Protection & EDR": 650,
+    "Managed Cyber SOC & SIEM Logging": 2400,
+    "SIP Trunk & Voice Channels": 450,
+    "Cloud PBX Voice License": 180,
+    "AI Auto-Attendant & Call Recording": 350,
+    "Toll-Free 0800 Virtual Routing": 250,
+    "Hybrid On-Premise PABX Server": 1200,
+    "Cloud Multi-Tenant PABX Engine": 850,
+    "Call Center Queue & IVR Engine": 1500,
+    "Executive HD Touchscreen IP Phone": 320,
+    "Standard IP Office Desk Phone": 150,
+    "Cordless Long-Range DECT Handset": 180,
+    "Conference Room 360° Speakerphone": 550
+  };
+
+  const toggleAddon = (category: 'security' | 'voiceCloud' | 'pabx' | 'telephones', item: string) => {
+    setSelectedAddons(prev => {
+      const current = prev[category];
+      const exists = current.includes(item);
+      return {
+        ...prev,
+        [category]: exists ? current.filter(i => i !== item) : [...current, item]
+      };
+    });
+  };
+
+  const calculateAddonsMrc = () => {
+    const allSelected = [
+      ...selectedAddons.security,
+      ...selectedAddons.voiceCloud,
+      ...selectedAddons.pabx,
+      ...selectedAddons.telephones
+    ];
+    return allSelected.reduce((sum, item) => sum + (addonPrices[item] || 0), 0);
+  };
 
   // Local state for quote parsing & upload/download
   const [rawQuoteText, setRawQuoteText] = useState("");
@@ -278,10 +330,10 @@ Contact: quotes@connectiq.reunert.co.za
         gpsCoordinates: gps,
         status: "completed",
         services: [
-          { type: "Fiber", available: true, vendor: "Fibre Com Connect", maxSpeed: "1 Gbps", latency: "4ms", estimatedLeadTime: "4 weeks" },
-          { type: "Wireless", available: true, vendor: "Reunert AirLink", maxSpeed: "150 Mbps", latency: "12ms", estimatedLeadTime: "2 weeks" },
-          { type: "LTE", available: true, vendor: "MTN South Africa", maxSpeed: "80 Mbps", latency: "25ms", estimatedLeadTime: "3 days" },
-          { type: "Satellite", available: true, vendor: "Starlink Business", maxSpeed: "220 Mbps", latency: "45ms", estimatedLeadTime: "7 days" }
+          { type: "Fiber", available: true, vendor: "Reunert Fibre", maxSpeed: "1 Gbps", latency: "4ms", estimatedLeadTime: "4 weeks" },
+          { type: "Wireless", available: true, vendor: "Reunert Air Fibre", maxSpeed: "150 Mbps", latency: "12ms", estimatedLeadTime: "2 weeks" },
+          { type: "LTE", available: true, vendor: "Reunert Unlimited LTE", maxSpeed: "100 Mbps", latency: "20ms", estimatedLeadTime: "2 days" },
+          { type: "Satellite", available: true, vendor: "Reunert LEO", maxSpeed: "250 Mbps", latency: "35ms", estimatedLeadTime: "5 days" }
         ]
       };
       setFeasibilities(prev => [newFeas, ...prev.filter(f => f.leadId !== activeLead.id)]);
@@ -355,9 +407,21 @@ Contact: quotes@connectiq.reunert.co.za
   };
 
   const handleManualUpload = () => {
-    const mrc = selectedProduct.serviceType === "enterprise" ? 12500 : selectedProduct.serviceType === "premium" ? 7500 : 4200;
-    const costPrice = mrc * 0.5;
+    const baseMrc = selectedProduct.serviceType === "enterprise" ? 12500 : selectedProduct.serviceType === "premium" ? 7500 : 4200;
+    const addonsMrc = calculateAddonsMrc();
+    const totalMrc = baseMrc + addonsMrc;
     const margin = 50;
+
+    const allSelectedAddons = [
+      ...selectedAddons.security,
+      ...selectedAddons.voiceCloud,
+      ...selectedAddons.pabx,
+      ...selectedAddons.telephones
+    ];
+
+    const notesStr = allSelectedAddons.length > 0
+      ? `Quotation created via platform wizard. Included Add-on Products: ${allSelectedAddons.join(", ")}.`
+      : "Quotation created through platform wizard selections.";
 
     const newQuote: Quotation = {
       id: `quote-${Date.now().toString().slice(-3)}`,
@@ -370,12 +434,12 @@ Contact: quotes@connectiq.reunert.co.za
       leadTimeWeeks: selectedProduct.vendor === "Fibre Com Connect" ? 4 : 2,
       bandwidth: selectedProduct.bandwidth,
       nrc: selectedProduct.serviceType === "enterprise" ? 8500 : selectedProduct.serviceType === "premium" ? 4500 : 2500,
-      mrc: mrc,
+      mrc: totalMrc,
       termMonths: parseInt(selectedProduct.term),
       lastMileProvider: selectedProduct.vendor,
       contention: selectedProduct.serviceType === "enterprise" ? "1:1" : selectedProduct.serviceType === "premium" ? "1:2" : "1:5",
       provisioningType: "Layer 3",
-      notes: "Quotation created through platform wizard selections.",
+      notes: notesStr,
       pricingValidityDays: 30,
       marginPercentage: margin,
       status: "uploaded"
@@ -578,11 +642,204 @@ Contact: quotes@connectiq.reunert.co.za
                   onChange={(e) => setSelectedProduct(prev => ({ ...prev, vendor: e.target.value }))}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white"
                 >
-                  <option value="Fibre Com Connect">Fibre Com Connect (Reunert Network Partner)</option>
-                  <option value="Reunert AirLink">Reunert AirLink (P2P Wireless)</option>
-                  <option value="MTN South Africa">MTN South Africa (National Fiber Core)</option>
-                  <option value="Vodacom Business">Vodacom Business (Enterprise Lease)</option>
+                  <option value="Reunert Fibre">Reunert Fibre</option>
+                  <option value="Reunert Air Fibre">Reunert Air Fibre</option>
+                  <option value="Reunert LEO">Reunert LEO</option>
+                  <option value="Amazon LEO">Amazon LEO</option>
+                  <option value="Reunert Unlimited LTE">Reunert Unlimited LTE</option>
+                  <option value="Reunert Fixed LTE">Reunert Fixed LTE</option>
                 </select>
+              </div>
+            </div>
+
+            {/* 2B. Additional Value-Added Products & Services */}
+            <div className="pt-5 border-t border-slate-100 space-y-4" id="additional-products-block">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-teal-600" />
+                    3. Additional Products & Value-Add Services
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Bundle integrated security services, Voice Cloud, PABX systems &amp; telephone endpoints with your quote.
+                  </p>
+                </div>
+                
+                <div className="bg-teal-50 border border-teal-200 text-teal-800 px-3 py-1 rounded-lg text-xs font-bold font-mono shrink-0 self-start sm:self-auto">
+                  Add-ons: +R {calculateAddonsMrc().toLocaleString()} / mo
+                </div>
+              </div>
+
+              {/* 4 Product Category Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* Category 1: Security Services */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+                    <div className="flex items-center gap-1.5 font-bold text-xs text-slate-800">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      Security Services
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-mono">UTM / SOC / DDoS</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {[
+                      { name: "Next-Gen Enterprise Firewall (UTM)", price: 1800, desc: "AI Threat Prevention & SSL Inspection" },
+                      { name: "Anti-DDoS Scrubbing & Mitigation", price: 950, desc: "24/7 Volumetric DDoS Scrubbing" },
+                      { name: "Endpoint Threat Protection & EDR", price: 650, desc: "Antivirus & Endpoint Detection" },
+                      { name: "Managed Cyber SOC & SIEM Logging", price: 2400, desc: "Live SOC Incident Monitoring" }
+                    ].map((item) => {
+                      const active = selectedAddons.security.includes(item.name);
+                      return (
+                        <button
+                          key={item.name}
+                          type="button"
+                          onClick={() => toggleAddon('security', item.name)}
+                          className={`w-full text-left p-2 rounded-lg border text-xs transition-all flex items-start justify-between cursor-pointer ${
+                            active 
+                              ? "bg-white border-teal-500 text-teal-950 shadow-xs ring-1 ring-teal-500" 
+                              : "bg-white/60 border-slate-200 text-slate-700 hover:bg-white"
+                          }`}
+                        >
+                          <div className="pr-2">
+                            <div className="font-bold flex items-center gap-1.5">
+                              <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${active ? "bg-teal-600 text-white" : "border border-slate-300 text-transparent"}`}>✓</span>
+                              {item.name}
+                            </div>
+                            <p className="text-[10px] text-slate-500 pl-5">{item.desc}</p>
+                          </div>
+                          <span className="font-mono font-bold text-teal-700 text-[11px] shrink-0">+R {item.price}/mo</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Category 2: Voice Cloud */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+                    <div className="flex items-center gap-1.5 font-bold text-xs text-slate-800">
+                      <Phone className="w-4 h-4 text-sky-600" />
+                      Voice Cloud (SIP & Voice)
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-mono">SIP / Cloud Voice</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {[
+                      { name: "SIP Trunk & Voice Channels", price: 450, desc: "Unlimited Concurrent SIP Calls" },
+                      { name: "Cloud PBX Voice License", price: 180, desc: "Hosted Seat License & Softphone" },
+                      { name: "AI Auto-Attendant & Call Recording", price: 350, desc: "Smart IVR & Cloud Audio Storage" },
+                      { name: "Toll-Free 0800 Virtual Routing", price: 250, desc: "National Toll-Free Line Hosting" }
+                    ].map((item) => {
+                      const active = selectedAddons.voiceCloud.includes(item.name);
+                      return (
+                        <button
+                          key={item.name}
+                          type="button"
+                          onClick={() => toggleAddon('voiceCloud', item.name)}
+                          className={`w-full text-left p-2 rounded-lg border text-xs transition-all flex items-start justify-between cursor-pointer ${
+                            active 
+                              ? "bg-white border-teal-500 text-teal-950 shadow-xs ring-1 ring-teal-500" 
+                              : "bg-white/60 border-slate-200 text-slate-700 hover:bg-white"
+                          }`}
+                        >
+                          <div className="pr-2">
+                            <div className="font-bold flex items-center gap-1.5">
+                              <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${active ? "bg-teal-600 text-white" : "border border-slate-300 text-transparent"}`}>✓</span>
+                              {item.name}
+                            </div>
+                            <p className="text-[10px] text-slate-500 pl-5">{item.desc}</p>
+                          </div>
+                          <span className="font-mono font-bold text-sky-700 text-[11px] shrink-0">+R {item.price}/mo</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Category 3: PABX Systems */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+                    <div className="flex items-center gap-1.5 font-bold text-xs text-slate-800">
+                      <Cpu className="w-4 h-4 text-indigo-600" />
+                      PABX Systems
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-mono">On-Prem / Multi-Tenant</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {[
+                      { name: "Hybrid On-Premise PABX Server", price: 1200, desc: "Rackmount Appliance with PSTN Ports" },
+                      { name: "Cloud Multi-Tenant PABX Engine", price: 850, desc: "High Availability Multi-Tenant Engine" },
+                      { name: "Call Center Queue & IVR Engine", price: 1500, desc: "Real-time Wallboards & Queues" }
+                    ].map((item) => {
+                      const active = selectedAddons.pabx.includes(item.name);
+                      return (
+                        <button
+                          key={item.name}
+                          type="button"
+                          onClick={() => toggleAddon('pabx', item.name)}
+                          className={`w-full text-left p-2 rounded-lg border text-xs transition-all flex items-start justify-between cursor-pointer ${
+                            active 
+                              ? "bg-white border-teal-500 text-teal-950 shadow-xs ring-1 ring-teal-500" 
+                              : "bg-white/60 border-slate-200 text-slate-700 hover:bg-white"
+                          }`}
+                        >
+                          <div className="pr-2">
+                            <div className="font-bold flex items-center gap-1.5">
+                              <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${active ? "bg-teal-600 text-white" : "border border-slate-300 text-transparent"}`}>✓</span>
+                              {item.name}
+                            </div>
+                            <p className="text-[10px] text-slate-500 pl-5">{item.desc}</p>
+                          </div>
+                          <span className="font-mono font-bold text-indigo-700 text-[11px] shrink-0">+R {item.price}/mo</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Category 4: Telephones & Endpoints */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+                    <div className="flex items-center gap-1.5 font-bold text-xs text-slate-800">
+                      <Phone className="w-4 h-4 text-purple-600" />
+                      Telephones &amp; Endpoints
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-mono">IP Phones / DECT</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {[
+                      { name: "Executive HD Touchscreen IP Phone", price: 320, desc: "7-inch Color Touchscreen Gigabit IP Phone" },
+                      { name: "Standard IP Office Desk Phone", price: 150, desc: "PoE Dual-Port Executive Desk Phone" },
+                      { name: "Cordless Long-Range DECT Handset", price: 180, desc: "Ruggedized Wireless Handset" },
+                      { name: "Conference Room 360° Speakerphone", price: 550, desc: "Smart Microphone Array Unit" }
+                    ].map((item) => {
+                      const active = selectedAddons.telephones.includes(item.name);
+                      return (
+                        <button
+                          key={item.name}
+                          type="button"
+                          onClick={() => toggleAddon('telephones', item.name)}
+                          className={`w-full text-left p-2 rounded-lg border text-xs transition-all flex items-start justify-between cursor-pointer ${
+                            active 
+                              ? "bg-white border-teal-500 text-teal-950 shadow-xs ring-1 ring-teal-500" 
+                              : "bg-white/60 border-slate-200 text-slate-700 hover:bg-white"
+                          }`}
+                        >
+                          <div className="pr-2">
+                            <div className="font-bold flex items-center gap-1.5">
+                              <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${active ? "bg-teal-600 text-white" : "border border-slate-300 text-transparent"}`}>✓</span>
+                              {item.name}
+                            </div>
+                            <p className="text-[10px] text-slate-500 pl-5">{item.desc}</p>
+                          </div>
+                          <span className="font-mono font-bold text-purple-700 text-[11px] shrink-0">+R {item.price}/mo</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
               </div>
             </div>
 
