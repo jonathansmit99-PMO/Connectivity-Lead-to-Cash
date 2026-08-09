@@ -56,6 +56,25 @@ export default function LeadCapture({
   const [isAssessing, setIsAssessing] = useState(false);
   const [draftingContract, setDraftingContract] = useState(false);
 
+  // Compliance documentation uploaded during creation
+  const [creationDocs, setCreationDocs] = useState<{ [key: string]: { fileName: string; uploadedAt: string } }>({
+    registrationPapers: { fileName: "CIPC_CoRegistration_Co14.pdf", uploadedAt: "Pre-attached" },
+    proofOfAddress: { fileName: "Corporate_Address_Utility_Bill.pdf", uploadedAt: "Pre-attached" }
+  });
+  const [uploadingDocKey, setUploadingDocKey] = useState<string | null>(null);
+
+  const handleSimulatedFileUpload = (key: string, nameFromInput?: string) => {
+    setUploadingDocKey(key);
+    setTimeout(() => {
+      const fileName = nameFromInput || `${key}_${Date.now().toString().slice(-4)}.pdf`;
+      setCreationDocs(prev => ({
+        ...prev,
+        [key]: { fileName, uploadedAt: new Date().toLocaleTimeString() }
+      }));
+      setUploadingDocKey(null);
+    }, 700);
+  };
+
   // Selected lead
   const activeLead = leads.find(l => l.id === selectedLeadId) || leads[0];
 
@@ -67,6 +86,13 @@ export default function LeadCapture({
   const handleCreateLead = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.clientName || !formData.companyName) return;
+
+    const docsRecord: Record<string, string> = {};
+    Object.keys(creationDocs).forEach(key => {
+      docsRecord[key] = "uploaded";
+    });
+
+    const hasRequiredDocs = Object.keys(creationDocs).length >= 3;
 
     const newLead: Lead = {
       id: `lead-${Date.now().toString().slice(-3)}`,
@@ -89,8 +115,8 @@ export default function LeadCapture({
         email: formData.authEmail || formData.email,
         phone: formData.authPhone || formData.phone
       },
-      status: "lead_captured",
-      documents: {},
+      status: hasRequiredDocs ? "compliance_pending" : "company_details_entered",
+      documents: docsRecord,
       createdAt: new Date().toISOString()
     };
 
@@ -463,6 +489,98 @@ export default function LeadCapture({
                       required
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* 03 Compliance Documentation Upload Section */}
+              <div className="pt-4 border-t border-slate-100">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                  <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-teal-600" />
+                    03 Required Compliance &amp; KYC Documentation
+                  </h3>
+                  <span className="text-[11px] font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2.5 py-0.5 rounded-full shrink-0">
+                    FICA &amp; CIPC KYB Verification
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mb-4">
+                  Please upload or attach required legal compliance documentation to process credit scoring, FICA validation, and corporate onboarding.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { key: "registrationPapers", label: "CIPC Co. Registration (Co14/CK1)", required: true },
+                    { key: "proofOfAddress", label: "Proof of Corporate Address (Utility Bill)", required: true },
+                    { key: "signatoryId", label: "ID Signatories (Identity Docs / Passports)", required: true },
+                    { key: "bankProof", label: "Corporate Bank Account Stamped Letter", required: true },
+                    { key: "taxInfo", label: "SARS Tax Clearance Certificate", required: false },
+                    { key: "cipcDocs", label: "Shareholder Certificate / B-BBEE Affidavit", required: false }
+                  ].map(doc => {
+                    const docState = creationDocs[doc.key];
+                    const isUploading = uploadingDocKey === doc.key;
+
+                    return (
+                      <div 
+                        key={doc.key}
+                        className={`p-3 rounded-lg border text-xs transition-all flex flex-col justify-between gap-2.5 ${
+                          docState ? "border-emerald-300 bg-emerald-50/30" : "border-slate-200 bg-slate-50/50 hover:border-slate-300"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="font-semibold text-slate-800 flex items-center gap-1.5">
+                              {docState ? (
+                                <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              ) : (
+                                <FileCheck className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              )}
+                              {doc.label}
+                            </span>
+                            {doc.required && (
+                              <span className="text-[10px] text-amber-600 font-medium mt-0.5 block">
+                                * Mandatory FICA / CIPC requirement
+                              </span>
+                            )}
+                          </div>
+                          
+                          {docState && (
+                            <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-md shrink-0 uppercase tracking-wider">
+                              Uploaded
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 mt-0.5">
+                          {docState ? (
+                            <span className="text-[11px] text-slate-700 font-mono truncate max-w-[170px]" title={docState.fileName}>
+                              📎 {docState.fileName}
+                            </span>
+                          ) : (
+                            <span className="text-[11px] text-slate-400 italic">No file attached yet</span>
+                          )}
+
+                          <label className="cursor-pointer text-[11px] font-bold text-teal-700 bg-white hover:bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 shadow-xs shrink-0">
+                            {isUploading ? (
+                              <>
+                                <Loader2 className="w-3 h-3 animate-spin text-teal-600" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="w-3 h-3 text-teal-600" />
+                                {docState ? "Replace File" : "Upload Document"}
+                              </>
+                            )}
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              onChange={(e) => handleSimulatedFileUpload(doc.key, e.target.files?.[0]?.name)} 
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
