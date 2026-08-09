@@ -307,6 +307,7 @@ export default function App() {
               cases={cases}
               setCases={setCases}
               quotations={quotations}
+              setQuotations={setQuotations}
               activePersona={activePersona}
               selectedLeadId={selectedLeadId}
             />

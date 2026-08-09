@@ -21,7 +21,15 @@ import {
   Lock,
   Edit2,
   CalendarDays,
-  FileSignature
+  FileSignature,
+  AlertTriangle,
+  Send,
+  Users,
+  RefreshCw,
+  Building2,
+  BellRing,
+  XCircle,
+  ArrowRightLeft
 } from "lucide-react";
 
 interface DeliveryServicesProps {
@@ -29,6 +37,7 @@ interface DeliveryServicesProps {
   cases: ProjectCase[];
   setCases: React.Dispatch<React.SetStateAction<ProjectCase[]>>;
   quotations: Quotation[];
+  setQuotations?: React.Dispatch<React.SetStateAction<Quotation[]>>;
   activePersona: string;
   selectedLeadId: string;
 }
@@ -38,6 +47,7 @@ export default function DeliveryServices({
   cases,
   setCases,
   quotations,
+  setQuotations,
   activePersona,
   selectedLeadId
 }: DeliveryServicesProps) {
@@ -58,6 +68,16 @@ export default function DeliveryServices({
   const [typedSignature, setTypedSignature] = useState("");
   const [buildStart, setBuildStart] = useState("");
   const [buildEnd, setBuildEnd] = useState("");
+
+  // Vendor Feasibility & Department Notification States
+  const [unfeasibleReason, setUnfeasibleReason] = useState("Wayleave / Landlord Permit Refused");
+  const [customUnfeasibleNote, setCustomUnfeasibleNote] = useState("");
+  const [notifySales, setNotifySales] = useState(true);
+  const [notifyLines, setNotifyLines] = useState(true);
+  const [isNotifyingDepartments, setIsNotifyingDepartments] = useState(false);
+  const [notificationSentSuccess, setNotificationSentSuccess] = useState(false);
+  const [selectedNewVendorInDelivery, setSelectedNewVendorInDelivery] = useState("Openserve");
+  const [showUnfeasibleForm, setShowUnfeasibleForm] = useState(false);
 
   // Sync state variables whenever active case changes
   useEffect(() => {
@@ -143,7 +163,55 @@ export default function DeliveryServices({
     });
   };
 
-  // 3. Load Planning Document
+  // 3. Vendor Feasibility Handlers
+  const handleConfirmVendorFeasible = () => {
+    updateCaseField({
+      vendorFeasibilityChecked: true,
+      vendorIsFeasible: true,
+      status: "vendor_feasibility_checked"
+    });
+    setNotificationSentSuccess(false);
+  };
+
+  const handleSendVendorUnfeasibleNotification = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsNotifyingDepartments(true);
+    const fullReason = customUnfeasibleNote 
+      ? `${unfeasibleReason} - Note: ${customUnfeasibleNote}` 
+      : unfeasibleReason;
+      
+    const depts: string[] = [];
+    if (notifySales) depts.push("Sales");
+    if (notifyLines) depts.push("Lines");
+
+    setTimeout(() => {
+      updateCaseField({
+        vendorFeasibilityChecked: true,
+        vendorIsFeasible: false,
+        vendorUnfeasibleReason: fullReason,
+        vendorUnfeasibleNotifiedDepartments: depts,
+        vendorUnfeasibleNotificationSentAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        status: "vendor_feasibility_checked"
+      });
+      setIsNotifyingDepartments(false);
+      setNotificationSentSuccess(true);
+    }, 800);
+  };
+
+  const handleSalesLinesChangeVendor = (newVendorName: string) => {
+    if (setQuotations && activeQuote) {
+      setQuotations(prev => prev.map(q => q.id === activeQuote.id ? { ...q, networkOperator: newVendorName } : q));
+    }
+    updateCaseField({
+      vendorIsFeasible: true,
+      vendorFeasibilityChecked: true,
+      status: "vendor_feasibility_checked"
+    });
+    setNotificationSentSuccess(false);
+    setShowUnfeasibleForm(false);
+  };
+
+  // 4. Load Planning Document
   const handleMockUploadPlanning = () => {
     setIsUploadingPlanning(true);
     setTimeout(() => {
@@ -156,7 +224,7 @@ export default function DeliveryServices({
     }, 1200);
   };
 
-  // 4. Approve Planning Document
+  // 5. Approve Planning Document
   const handleSignPlanningDoc = (e: React.FormEvent) => {
     e.preventDefault();
     if (!signeeName) return;
@@ -169,7 +237,7 @@ export default function DeliveryServices({
     });
   };
 
-  // 5. Save Build Start Date
+  // 6. Save Build Start Date
   const handleSaveBuildStart = (e: React.FormEvent) => {
     e.preventDefault();
     if (!buildStart) return;
@@ -178,7 +246,7 @@ export default function DeliveryServices({
     });
   };
 
-  // 6. Save Build End Date
+  // 7. Save Build End Date
   const handleSaveBuildEnd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!buildEnd) return;
@@ -188,7 +256,7 @@ export default function DeliveryServices({
     });
   };
 
-  // 7. Upload Handover Certificate
+  // 8. Upload Handover Certificate
   const handleMockUploadHandover = () => {
     setIsUploadingHandover(true);
     setTimeout(() => {
@@ -201,10 +269,11 @@ export default function DeliveryServices({
     }, 1200);
   };
 
-  // Define the 7 progress steps
+  // Define the 8 progress steps
   const stepsList = [
     { key: "book_survey", label: "Book Survey Date", done: !!activeCase.surveyDate },
     { key: "survey_complete", label: "Survey Date Complete", done: !!activeCase.surveyCompleted },
+    { key: "vendor_feasibility", label: "Vendor Not Feasible / Feasibility", done: !!activeCase.vendorFeasibilityChecked },
     { key: "load_planning", label: "Load Planning Document", done: !!activeCase.planningDocName },
     { key: "approve_planning", label: "Approve Planning Document", done: !!activeCase.planningDocSigned },
     { key: "build_start", label: "Build Start Date", done: !!activeCase.buildStartDate },
@@ -242,6 +311,11 @@ export default function DeliveryServices({
       updateCaseField({
         surveyDate: undefined,
         surveyCompleted: undefined,
+        vendorFeasibilityChecked: undefined,
+        vendorIsFeasible: undefined,
+        vendorUnfeasibleReason: undefined,
+        vendorUnfeasibleNotifiedDepartments: undefined,
+        vendorUnfeasibleNotificationSentAt: undefined,
         planningDocName: undefined,
         planningDocUrl: undefined,
         planningDocSigned: undefined,
@@ -257,13 +331,15 @@ export default function DeliveryServices({
       setLocalSurveyDate("");
       setBuildStart("");
       setBuildEnd("");
+      setNotificationSentSuccess(false);
+      setShowUnfeasibleForm(false);
     }
   };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in" id="phase4-container">
       
-      {/* LEFT COLUMN: Workspace 7-Step Sidebar Indicator */}
+      {/* LEFT COLUMN: Workspace 8-Step Sidebar Indicator */}
       <div className="lg:col-span-3 space-y-6">
         <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-md border border-slate-800">
           <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
@@ -347,7 +423,7 @@ export default function DeliveryServices({
             </span>
             <h2 className="font-sans font-bold text-xl text-slate-800 mt-2">Phase 4: Physical Connectivity Delivery</h2>
             <p className="text-xs text-slate-500 mt-1">
-              Follow and complete the 7 chronological steps below to verify physical fiber routing, civil works, and engineering SLA handover.
+              Follow and complete the 8 chronological steps below to verify physical fiber routing, civil works, and engineering SLA handover.
             </p>
           </div>
           <div className="bg-slate-50 rounded-xl px-4 py-2.5 border border-slate-100 text-right">
@@ -358,7 +434,7 @@ export default function DeliveryServices({
           </div>
         </div>
 
-        {/* The Vertical Stepper Loop (7 Connected Steps) */}
+        {/* The Vertical Stepper Loop (8 Connected Steps) */}
         <div className="relative space-y-6">
           {/* Connector Line behind cards */}
           <div className="absolute left-8 top-10 bottom-10 w-[2px] bg-slate-100 hidden md:block" />
@@ -538,9 +614,296 @@ export default function DeliveryServices({
             );
           })()}
 
-          {/* STAGE 3: Load Planning Document */}
+          {/* STAGE 3: Vendor Feasibility Check / Vendor Not Feasible */}
           {(() => {
             const status = getStepStatus(2);
+            return (
+              <div 
+                className={`relative bg-white border rounded-2xl shadow-xs transition-all duration-300 ${
+                  status === "active" ? "border-amber-500 ring-2 ring-amber-50/60" : "border-slate-200"
+                } ${status === "locked" ? "opacity-50 pointer-events-none" : "opacity-100"}`}
+                id="step-vendor-feasibility"
+              >
+                {/* Visual Connector Node */}
+                <div className={`absolute -left-10 top-6 w-5 h-5 rounded-full border-4 flex items-center justify-center font-bold text-[10px] hidden md:flex transition-all ${
+                  status === "completed" 
+                    ? activeCase.vendorIsFeasible === false
+                      ? "bg-amber-500 border-amber-100 text-white"
+                      : "bg-emerald-500 border-emerald-150 text-white" 
+                    : status === "active"
+                      ? "bg-amber-500 border-amber-100 text-white animate-pulse"
+                      : "bg-slate-100 border-slate-200 text-slate-400"
+                }`}>
+                  3
+                </div>
+
+                <div className="p-6">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">3</span>
+                      <div>
+                        <h3 className="font-sans font-bold text-slate-800 text-sm flex items-center gap-2">
+                          Stage 3: Vendor Feasibility Check
+                          <span className="text-[10px] font-normal text-slate-400 font-mono">
+                            (Assigned: {activeQuote?.networkOperator || "Fibre Com Connect"})
+                          </span>
+                        </h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          Confirm physical line feasibility or flag as unfeasible to send automated re-assignment alerts to Sales &amp; Lines teams.
+                        </p>
+                      </div>
+                    </div>
+                    {status === "completed" ? (
+                      activeCase.vendorIsFeasible === false ? (
+                        <span className="text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200 px-2.5 py-1 rounded-full flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3 text-amber-600" /> Vendor Unfeasible (Sales &amp; Lines Notified)
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-100 px-2.5 py-1 rounded-full flex items-center gap-1">
+                          ✓ Vendor Feasible
+                        </span>
+                      )
+                    ) : status === "locked" ? (
+                      <span className="text-[10px] font-bold bg-slate-100 text-slate-400 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <Lock className="w-3 h-3" /> Locked
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-100 px-2.5 py-1 rounded-full animate-pulse">
+                        Pending Onsite Feasibility Audit
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-4">
+                    {status === "completed" ? (
+                      activeCase.vendorIsFeasible === false ? (
+                        <div className="space-y-4">
+                          {/* Alert Banner */}
+                          <div className="p-4 bg-amber-50/80 border border-amber-200 rounded-xl space-y-2 text-xs">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 font-bold text-amber-950">
+                                <BellRing className="w-4 h-4 text-amber-700 animate-bounce" />
+                                Department Alert Active: Vendor Flagged as Unfeasible
+                              </div>
+                              <span className="text-[10px] font-mono bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-bold">
+                                Sent at {activeCase.vendorUnfeasibleNotificationSentAt || "Just now"}
+                              </span>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px] pt-1">
+                              <div className="bg-white/80 p-2.5 rounded-lg border border-amber-100">
+                                <span className="text-slate-400 font-semibold block text-[10px] uppercase">Survey Feasibility Constraint:</span>
+                                <p className="text-amber-950 font-medium mt-0.5">{activeCase.vendorUnfeasibleReason || "Wayleave / Landlord Permit Refused"}</p>
+                              </div>
+                              <div className="bg-white/80 p-2.5 rounded-lg border border-amber-100">
+                                <span className="text-slate-400 font-semibold block text-[10px] uppercase">Notified Departments:</span>
+                                <div className="flex items-center gap-1.5 mt-1">
+                                  {activeCase.vendorUnfeasibleNotifiedDepartments?.map(dept => (
+                                    <span key={dept} className="bg-indigo-100 text-indigo-900 border border-indigo-200 px-2 py-0.5 rounded text-[10px] font-bold">
+                                      🏢 {dept} Team Notified ✓
+                                    </span>
+                                  )) || (
+                                    <span className="text-indigo-900 font-bold">🏢 Sales &amp; Lines Departments Notified ✓</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Action panel for Sales & Lines to change vendor */}
+                          <div className="p-4 bg-slate-900 text-white rounded-xl border border-slate-800 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <ArrowRightLeft className="w-4 h-4 text-teal-400" />
+                                <h4 className="font-sans font-bold text-xs text-slate-100">Sales &amp; Lines Action Hub: Change Operator / Vendor</h4>
+                              </div>
+                              <span className="text-[10px] bg-teal-900/60 text-teal-300 border border-teal-700 px-2 py-0.5 rounded font-mono">
+                                Action Required: Sales &amp; Lines
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-300">
+                              Select a replacement vendor operator (e.g. Openserve, DFA, Vumatel, Frogfoot, MetroFibre) to re-quote and proceed with civil route planning:
+                            </p>
+
+                            <div className="flex flex-wrap items-center gap-3 pt-1">
+                              <select
+                                value={selectedNewVendorInDelivery}
+                                onChange={(e) => setSelectedNewVendorInDelivery(e.target.value)}
+                                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              >
+                                <option value="Openserve">Openserve (National Fiber)</option>
+                                <option value="Dark Fibre Africa (DFA)">Dark Fibre Africa (DFA)</option>
+                                <option value="Vumatel Commercial">Vumatel Commercial</option>
+                                <option value="MetroFibre Networx">MetroFibre Networx</option>
+                                <option value="Frogfoot Networks">Frogfoot Networks</option>
+                                <option value="Liquid Intelligent Tech">Liquid Intelligent Tech</option>
+                              </select>
+
+                              <button
+                                type="button"
+                                onClick={() => handleSalesLinesChangeVendor(selectedNewVendorInDelivery)}
+                                className="bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold py-1.5 px-4 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                              >
+                                <RefreshCw className="w-3.5 h-3.5" /> Re-assign to {selectedNewVendorInDelivery} &amp; Proceed
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-xl flex items-center justify-between flex-wrap gap-2 text-xs">
+                          <div className="flex items-center gap-2 text-emerald-900 font-medium">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <span>Initial vendor line pathway (<strong>{activeQuote?.networkOperator}</strong>) verified as <strong>Physically Feasible ✓</strong></span>
+                          </div>
+                          <button
+                            onClick={() => updateCaseField({ vendorIsFeasible: false })}
+                            className="text-[10px] text-amber-700 hover:underline font-bold"
+                          >
+                            Re-flag as Unfeasible
+                          </button>
+                        </div>
+                      )
+                    ) : status === "active" ? (
+                      <div className="space-y-4">
+                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                          <p className="text-xs text-slate-700 font-medium">
+                            Is the currently assigned vendor line pathway (<strong>{activeQuote?.networkOperator || "Fibre Com Connect"}</strong>) physically feasible following onsite survey findings?
+                          </p>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {/* Option 1: Vendor Feasible */}
+                            <button
+                              type="button"
+                              onClick={handleConfirmVendorFeasible}
+                              className="p-3.5 bg-white hover:bg-emerald-50/60 border border-slate-200 hover:border-emerald-400 rounded-xl text-left transition-all group cursor-pointer shadow-2xs"
+                            >
+                              <div className="flex items-center gap-2 font-bold text-xs text-emerald-800">
+                                <CheckCircle className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform" />
+                                Vendor Confirmed Feasible ✓
+                              </div>
+                              <p className="text-[10px] text-slate-500 mt-1">
+                                Line route and wayleaves are clear. Advance to Stage 4 CAD route planning.
+                              </p>
+                            </button>
+
+                            {/* Option 2: Vendor Not Feasible */}
+                            <button
+                              type="button"
+                              onClick={() => setShowUnfeasibleForm(true)}
+                              className={`p-3.5 bg-white hover:bg-amber-50/60 border ${showUnfeasibleForm ? "border-amber-500 ring-1 ring-amber-400 bg-amber-50/40" : "border-slate-200"} hover:border-amber-400 rounded-xl text-left transition-all group cursor-pointer shadow-2xs`}
+                            >
+                              <div className="flex items-center gap-2 font-bold text-xs text-amber-900">
+                                <AlertTriangle className="w-4 h-4 text-amber-600 group-hover:scale-110 transition-transform" />
+                                Vendor Not Feasible 🚨
+                              </div>
+                              <p className="text-[10px] text-slate-500 mt-1">
+                                Dispatch automated notification to Sales &amp; Lines departments to change vendor.
+                              </p>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Expandable Notification Form when Vendor Not Feasible is chosen */}
+                        {showUnfeasibleForm && (
+                          <form onSubmit={handleSendVendorUnfeasibleNotification} className="p-4 bg-amber-50/50 border border-amber-200 rounded-xl space-y-4 animate-fade-in">
+                            <div className="flex items-center gap-2 text-amber-950 font-bold text-xs pb-2 border-b border-amber-200/60">
+                              <BellRing className="w-4 h-4 text-amber-700" />
+                              Dispatch Notification to Sales &amp; Lines Departments
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="block text-[10px] font-bold text-slate-600 uppercase">Primary Constraint Reason *</label>
+                                <select
+                                  value={unfeasibleReason}
+                                  onChange={(e) => setUnfeasibleReason(e.target.value)}
+                                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                                >
+                                  <option value="Initial vendor wayleave / landlord permit rejected">Wayleave / Landlord Permit Refused</option>
+                                  <option value="High civil trenching / build cost surcharge (&gt; R100k)">High Build / Trenching Surcharge (&gt; R100k)</option>
+                                  <option value="No fiber port availability / POP exhaustion at site">No Port / POP Capacity at Building</option>
+                                  <option value="Unacceptable installation lead time (&gt; 12 weeks)">Excessive SLA / Delivery Lead Time (&gt; 12 weeks)</option>
+                                  <option value="Other feasibility constraint">Other Feasibility Constraint</option>
+                                </select>
+                              </div>
+
+                              <div className="space-y-1.5">
+                                <label className="block text-[10px] font-bold text-slate-600 uppercase">Target Recipient Departments</label>
+                                <div className="flex items-center gap-4 pt-2 text-xs text-slate-800 font-medium">
+                                  <label className="flex items-center gap-1.5 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={notifySales}
+                                      onChange={(e) => setNotifySales(e.target.checked)}
+                                      className="rounded text-amber-600 focus:ring-amber-500"
+                                    />
+                                    <span>🏢 Sales Dept</span>
+                                  </label>
+                                  <label className="flex items-center gap-1.5 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={notifyLines}
+                                      onChange={(e) => setNotifyLines(e.target.checked)}
+                                      className="rounded text-amber-600 focus:ring-amber-500"
+                                    />
+                                    <span>🛠️ Lines Dept</span>
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="block text-[10px] font-bold text-slate-600 uppercase">Additional Engineering Context / Notes</label>
+                              <input
+                                type="text"
+                                value={customUnfeasibleNote}
+                                onChange={(e) => setCustomUnfeasibleNote(e.target.value)}
+                                placeholder="e.g. Building manager declined basement drilling; Sales requested to switch to Openserve fiber."
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                              />
+                            </div>
+
+                            <div className="flex items-center justify-end gap-2 pt-2 border-t border-amber-200/60">
+                              <button
+                                type="button"
+                                onClick={() => setShowUnfeasibleForm(false)}
+                                className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800 cursor-pointer"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="submit"
+                                disabled={isNotifyingDepartments || (!notifySales && !notifyLines)}
+                                className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2 px-5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
+                              >
+                                {isNotifyingDepartments ? (
+                                  <>
+                                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                    Dispatching Alerts...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Send className="w-3.5 h-3.5" />
+                                    Send Notification to Sales &amp; Lines
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </form>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">Please mark survey complete in Stage 2 first to enable feasibility verification.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* STAGE 4: Load Planning Document */}
+          {(() => {
+            const status = getStepStatus(3);
             return (
               <div 
                 className={`relative bg-white border rounded-2xl shadow-xs transition-all duration-300 ${
@@ -556,15 +919,15 @@ export default function DeliveryServices({
                       ? "bg-teal-500 border-teal-100 text-white animate-pulse"
                       : "bg-slate-100 border-slate-200 text-slate-400"
                 }`}>
-                  3
+                  4
                 </div>
 
                 <div className="p-6">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div className="flex items-center gap-2.5">
-                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">3</span>
+                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">4</span>
                       <div>
-                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 3: Load Planning Document</h3>
+                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 4: Load Planning Document</h3>
                         <p className="text-[11px] text-slate-400 mt-0.5">Upload the CAD design/PDF map showing route trenching layouts.</p>
                       </div>
                     </div>
@@ -618,13 +981,13 @@ export default function DeliveryServices({
                         ) : (
                           <div className="space-y-1.5">
                             <Upload className="w-8 h-8 text-slate-400 mx-auto" />
-                            <p className="text-xs font-bold text-slate-700">Drag & Drop Civil PDF Route Map, or <span className="text-teal-600 underline">Browse files</span></p>
+                            <p className="text-xs font-bold text-slate-700">Drag &amp; Drop Civil PDF Route Map, or <span className="text-teal-600 underline">Browse files</span></p>
                             <p className="text-[10px] text-slate-400 font-mono">Accepts PDF, CAD formats up to 25MB</p>
                           </div>
                         )}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">Please complete Stage 2 first to enable document loading.</p>
+                      <p className="text-xs text-slate-400 italic">Please complete Stage 3 feasibility check first to enable document loading.</p>
                     )}
                   </div>
                 </div>
@@ -632,9 +995,9 @@ export default function DeliveryServices({
             );
           })()}
 
-          {/* STAGE 4: Approve Planning Document */}
+          {/* STAGE 5: Approve Planning Document */}
           {(() => {
-            const status = getStepStatus(3);
+            const status = getStepStatus(4);
             return (
               <div 
                 className={`relative bg-white border rounded-2xl shadow-xs transition-all duration-300 ${
@@ -650,16 +1013,16 @@ export default function DeliveryServices({
                       ? "bg-teal-500 border-teal-100 text-white animate-pulse"
                       : "bg-slate-100 border-slate-200 text-slate-400"
                 }`}>
-                  4
+                  5
                 </div>
 
                 <div className="p-6">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div className="flex items-center gap-2.5">
-                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">4</span>
+                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">5</span>
                       <div>
-                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 4: Approve Planning Document</h3>
-                        <p className="text-[11px] text-slate-400 mt-0.5">Capture corporate & landlord digital sign-offs for the civil build path.</p>
+                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 5: Approve Planning Document (Landlord Approval)</h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Capture corporate &amp; landlord digital sign-offs for the civil build path.</p>
                       </div>
                     </div>
                     {status === "completed" ? (
@@ -768,11 +1131,11 @@ export default function DeliveryServices({
                           disabled={!signeeName}
                           className="w-full bg-slate-800 hover:bg-slate-950 text-white text-xs font-bold py-2.5 rounded-xl transition-all cursor-pointer"
                         >
-                          Authenticate Landlord & Client Consent Approval
+                          Authenticate Landlord &amp; Client Consent Approval
                         </button>
                       </form>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">Please complete Route Planning upload in Stage 3 first.</p>
+                      <p className="text-xs text-slate-400 italic">Please complete Route Planning upload in Stage 4 first.</p>
                     )}
                   </div>
                 </div>
@@ -780,9 +1143,9 @@ export default function DeliveryServices({
             );
           })()}
 
-          {/* STAGE 5: Build Start Date */}
+          {/* STAGE 6: Build Start Date */}
           {(() => {
-            const status = getStepStatus(4);
+            const status = getStepStatus(5);
             return (
               <div 
                 className={`relative bg-white border rounded-2xl shadow-xs transition-all duration-300 ${
@@ -798,15 +1161,15 @@ export default function DeliveryServices({
                       ? "bg-teal-500 border-teal-100 text-white animate-pulse"
                       : "bg-slate-100 border-slate-200 text-slate-400"
                 }`}>
-                  5
+                  6
                 </div>
 
                 <div className="p-6">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div className="flex items-center gap-2.5">
-                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">5</span>
+                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">6</span>
                       <div>
-                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 5: Build Start Date</h3>
+                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 6: Build Start Date</h3>
                         <p className="text-[11px] text-slate-400 mt-0.5">Determine the start date for civil trenching and roadway works.</p>
                       </div>
                     </div>
@@ -854,7 +1217,7 @@ export default function DeliveryServices({
                         </div>
                       </form>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">Please complete Stage 4 route approval first.</p>
+                      <p className="text-xs text-slate-400 italic">Please complete Stage 5 route approval first.</p>
                     )}
                   </div>
                 </div>
@@ -862,9 +1225,9 @@ export default function DeliveryServices({
             );
           })()}
 
-          {/* STAGE 6: Build End Date */}
+          {/* STAGE 7: Build End Date */}
           {(() => {
-            const status = getStepStatus(5);
+            const status = getStepStatus(6);
             return (
               <div 
                 className={`relative bg-white border rounded-2xl shadow-xs transition-all duration-300 ${
@@ -880,15 +1243,15 @@ export default function DeliveryServices({
                       ? "bg-teal-500 border-teal-100 text-white animate-pulse"
                       : "bg-slate-100 border-slate-200 text-slate-400"
                 }`}>
-                  6
+                  7
                 </div>
 
                 <div className="p-6">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div className="flex items-center gap-2.5">
-                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">6</span>
+                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">7</span>
                       <div>
-                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 6: Build End Date</h3>
+                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 7: Build End Date</h3>
                         <p className="text-[11px] text-slate-400 mt-0.5">Define the planned final completion/splicing target date.</p>
                       </div>
                     </div>
@@ -944,7 +1307,7 @@ export default function DeliveryServices({
                         </div>
                       </form>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">Please complete Stage 5 build start date logging.</p>
+                      <p className="text-xs text-slate-400 italic">Please complete Stage 6 build start date logging.</p>
                     )}
                   </div>
                 </div>
@@ -952,9 +1315,9 @@ export default function DeliveryServices({
             );
           })()}
 
-          {/* STAGE 7: Upload Handover Certificate */}
+          {/* STAGE 8: Upload Handover Certificate */}
           {(() => {
-            const status = getStepStatus(6);
+            const status = getStepStatus(7);
             return (
               <div 
                 className={`relative bg-white border rounded-2xl shadow-xs transition-all duration-300 ${
@@ -970,15 +1333,15 @@ export default function DeliveryServices({
                       ? "bg-teal-500 border-teal-100 text-white animate-pulse"
                       : "bg-slate-100 border-slate-200 text-slate-400"
                 }`}>
-                  7
+                  8
                 </div>
 
                 <div className="p-6">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div className="flex items-center gap-2.5">
-                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">7</span>
+                      <span className="md:hidden flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">8</span>
                       <div>
-                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 7: Upload Handover Certificate</h3>
+                        <h3 className="font-sans font-bold text-slate-800 text-sm">Stage 8: Upload Handover Certificate</h3>
                         <p className="text-[11px] text-slate-400 mt-0.5">Upload the final signed SLA engineering handover document to conclude Phase 4.</p>
                       </div>
                     </div>
@@ -1044,7 +1407,7 @@ export default function DeliveryServices({
                         </div>
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">Please complete Stage 6 to enable certificate upload.</p>
+                      <p className="text-xs text-slate-400 italic">Please complete Stage 7 to enable certificate upload.</p>
                     )}
                   </div>
                 </div>
@@ -1060,7 +1423,7 @@ export default function DeliveryServices({
             <div>
               <h4 className="font-sans font-bold text-sm">Phase 4 Connectivity Delivery Complete!</h4>
               <p className="text-[11px] text-teal-100 max-w-lg mt-0.5">
-                All 7 stages of physical connectivity and civil works are signed and sealed. Proceed to the next tab **Phase 5: Field & Remote Engineering** to book field technicians and configure core router parameters.
+                All 8 stages of physical connectivity and civil works are signed and sealed. Proceed to the next tab **Phase 5: Field & Remote Engineering** to book field technicians and configure core router parameters.
               </p>
             </div>
             <span className="text-xs bg-white/10 border border-white/20 px-3 py-2 rounded-lg flex items-center gap-1 shrink-0 font-bold font-mono">

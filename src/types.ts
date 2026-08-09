@@ -91,6 +91,13 @@ export interface Quotation {
   pricingValidityDays: number; // usually 30
   status: 'draft' | 'uploaded' | 'margin_verified' | 'po_uploaded' | 'rejected';
   marginPercentage: number;
+  vendorCostMrc?: number;
+  vendorCostNrc?: number;
+  vendorQuoteFileName?: string;
+  vendorQuoteUploadedAt?: string;
+  costValidated?: boolean;
+  previousVendor?: string;
+  vendorChangeReason?: string;
   poNumber?: string;
   poUploadedAt?: string;
 }
@@ -116,10 +123,15 @@ export interface ProjectCase {
   id: string;
   leadId: string;
   quotationId: string;
-  status: 'case_created' | 'survey_scheduled' | 'survey_completed' | 'planning_uploaded' | 'landlord_approval_pending' | 'landlord_approved' | 'installation_scheduled' | 'installed' | 'testing_and_handover' | 'router_configured' | 'live';
+  status: 'case_created' | 'survey_scheduled' | 'survey_completed' | 'vendor_feasibility_checked' | 'planning_uploaded' | 'landlord_approval_pending' | 'landlord_approved' | 'installation_scheduled' | 'installed' | 'testing_and_handover' | 'router_configured' | 'live';
   surveyDate?: string;
   surveyEngineer?: string;
   surveyCompleted?: boolean;
+  vendorFeasibilityChecked?: boolean;
+  vendorIsFeasible?: boolean;
+  vendorUnfeasibleReason?: string;
+  vendorUnfeasibleNotifiedDepartments?: string[];
+  vendorUnfeasibleNotificationSentAt?: string;
   planningDocName?: string;
   planningDocUrl?: string;
   planningDocSigned?: boolean;
