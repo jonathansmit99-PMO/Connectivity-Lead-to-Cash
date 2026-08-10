@@ -55,7 +55,7 @@ export default function ContractLifecycle({
   
   // Form fields
   const [newTermMonths, setNewTermMonths] = useState<number>(24);
-  const [newBandwidth, setNewBandwidth] = useState<string>("1 Gbps");
+  const [newBandwidth, setNewBandwidth] = useState<string>("500 Mbps");
   const [newAddress, setNewAddress] = useState<string>("");
   const [newCoordinates, setNewCoordinates] = useState<string>("");
   const [reason, setReason] = useState<string>("");
@@ -364,11 +364,11 @@ export default function ContractLifecycle({
                       <select
                         value={newBandwidth}
                         onChange={e => setNewBandwidth(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-teal-500"
+                        className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-teal-500 font-medium"
                       >
-                        <option value="1 Gbps">1 Gbps Symmetric</option>
-                        <option value="2 Gbps">2 Gbps Symmetric</option>
-                        <option value="10 Gbps">10 Gbps Enterprise Core</option>
+                        {["10 Mbps", "20 Mbps", "50 Mbps", "100 Mbps", "200 Mbps", "300 Mbps", "400 Mbps", "500 Mbps", "600 Mbps", "700 Mbps", "800 Mbps", "900 Mbps", "1000 Mbps"].map(speed => (
+                          <option key={speed} value={speed}>{speed}</option>
+                        ))}
                       </select>
                     </div>
                     <div>

@@ -1230,14 +1230,11 @@ export default function EngineeringPhase({
                   <select
                     value={bandwidthSelection}
                     onChange={(e) => setBandwidthSelection(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 font-semibold"
                   >
-                    <option value="10 Mbps">10 Mbps</option>
-                    <option value="50 Mbps">50 Mbps</option>
-                    <option value="100 Mbps">100 Mbps</option>
-                    <option value="200 Mbps">200 Mbps</option>
-                    <option value="500 Mbps">500 Mbps</option>
-                    <option value="1 Gbps">1 Gbps (Core Fibre)</option>
+                    {["10 Mbps", "20 Mbps", "50 Mbps", "100 Mbps", "200 Mbps", "300 Mbps", "400 Mbps", "500 Mbps", "600 Mbps", "700 Mbps", "800 Mbps", "900 Mbps", "1000 Mbps"].map(speed => (
+                      <option key={speed} value={speed}>{speed}</option>
+                    ))}
                   </select>
                 </div>
               </div>

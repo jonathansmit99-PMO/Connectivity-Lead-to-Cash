@@ -246,7 +246,7 @@ export const INITIAL_LIFECYCLE_REQUESTS: LifecycleRequest[] = [
     requestType: "upgrade",
     status: "pending_sales",
     details: {
-      newBandwidth: "1 Gbps",
+      newBandwidth: "1000 Mbps",
       newTermMonths: 36,
       reason: "Increasing corporate database replication frequency and migrating disaster recovery to multi-region cloud services.",
       effectiveDate: "2026-07-01"

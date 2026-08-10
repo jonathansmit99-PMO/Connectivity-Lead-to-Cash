@@ -605,14 +605,11 @@ Contact: quotes@connectiq.reunert.co.za
                 <select
                   value={selectedProduct.bandwidth}
                   onChange={(e) => setSelectedProduct(prev => ({ ...prev, bandwidth: e.target.value }))}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white font-medium"
                 >
-                  <option value="20 Mbps">20 Mbps Broadband Link</option>
-                  <option value="50 Mbps">50 Mbps Sync Link</option>
-                  <option value="100 Mbps">100 Mbps Sync Fiber</option>
-                  <option value="200 Mbps">200 Mbps Dedicated Port</option>
-                  <option value="500 Mbps">500 Mbps Premium Port</option>
-                  <option value="1 Gbps">1 Gbps High-Density Port</option>
+                  {["10 Mbps", "20 Mbps", "50 Mbps", "100 Mbps", "200 Mbps", "300 Mbps", "400 Mbps", "500 Mbps", "600 Mbps", "700 Mbps", "800 Mbps", "900 Mbps", "1000 Mbps"].map(speed => (
+                    <option key={speed} value={speed}>{speed}</option>
+                  ))}
                 </select>
               </div>
 

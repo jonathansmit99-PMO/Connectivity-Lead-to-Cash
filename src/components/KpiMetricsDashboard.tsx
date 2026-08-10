@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ProjectCharterModal from "./ProjectCharterModal";
 import { 
   Lead, 
   Quotation, 
@@ -27,7 +28,8 @@ import {
   Building, 
   Layers,
   Award,
-  Activity
+  Activity,
+  FileText
 } from "lucide-react";
 
 interface KpiMetricsDashboardProps {
@@ -47,6 +49,7 @@ export default function KpiMetricsDashboard({
 }: KpiMetricsDashboardProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [copiedNotification, setCopiedNotification] = useState<string | null>(null);
+  const [isCharterModalOpen, setIsCharterModalOpen] = useState<boolean>(false);
 
   // 1. CALCULATE LIVE METRICS & KPIS FROM SYSTEM DATA
   const totalLeads = leads.length;
@@ -280,13 +283,23 @@ export default function KpiMetricsDashboard({
           </p>
         </div>
 
-        <button
-          onClick={exportKpiReport}
-          className="bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-md flex items-center gap-2 shrink-0 cursor-pointer border border-teal-400"
-        >
-          <Download className="w-4 h-4" />
-          <span>Export KPI Report</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <button
+            onClick={() => setIsCharterModalOpen(true)}
+            className="bg-slate-900 hover:bg-slate-800 text-teal-300 font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer border border-teal-500/40 hover:border-teal-400"
+          >
+            <FileText className="w-4 h-4 text-teal-400" />
+            <span>Export Project Charter PDF</span>
+          </button>
+
+          <button
+            onClick={exportKpiReport}
+            className="bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer border border-teal-400"
+          >
+            <Download className="w-4 h-4" />
+            <span>Export KPI Data</span>
+          </button>
+        </div>
       </div>
 
       {copiedNotification && (
@@ -524,6 +537,17 @@ export default function KpiMetricsDashboard({
           </table>
         </div>
       </div>
+
+      {/* Project Charter Formatted PDF Modal */}
+      <ProjectCharterModal
+        isOpen={isCharterModalOpen}
+        onClose={() => setIsCharterModalOpen(false)}
+        leads={leads}
+        quotations={quotations}
+        cases={cases}
+        tickets={tickets}
+        lifecycleRequests={lifecycleRequests}
+      />
     </div>
   );
 }
