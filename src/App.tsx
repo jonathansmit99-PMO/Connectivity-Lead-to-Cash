@@ -14,7 +14,8 @@ import {
   RefreshCw,
   Award,
   Server,
-  Sparkles
+  Sparkles,
+  BarChart3
 } from "lucide-react";
 
 // Types
@@ -43,6 +44,8 @@ import ExecutiveDashboard from "./components/ExecutiveDashboard";
 import CustomerSupport from "./components/CustomerSupport";
 import OmniAgent from "./components/OmniAgent";
 import ContractLifecycle from "./components/ContractLifecycle";
+import GoogleAccountSecurity from "./components/GoogleAccountSecurity";
+import KpiMetricsDashboard from "./components/KpiMetricsDashboard";
 
 export default function App() {
   // Shared state synchronized with localStorage
@@ -181,7 +184,8 @@ export default function App() {
                     activeTab === "delivery" ? "Phase 4: Connectivity Delivery" :
                     activeTab === "engineering" ? "Phase 5: Field Engineering" :
                     activeTab === "support" ? "Phase 6: Support & KAM" :
-                    activeTab === "lifecycle" ? "Phase 7: Contract Lifecycle" : "Executive Visibility"
+                    activeTab === "lifecycle" ? "Phase 7: Contract Lifecycle" :
+                    activeTab === "analytics" ? "Executive Visibility" : "KPI & Tracking Metrics"
                   }</span>
                 </span>
                 <span className="text-teal-400 font-mono font-bold bg-teal-950/80 border border-teal-800/60 px-2 py-0.5 rounded text-[10px]">
@@ -246,8 +250,10 @@ export default function App() {
               </div>
             </div>
 
-            {/* Role Persona Dropdown + Reset Action */}
-            <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+            {/* Google Account Security & Role Persona Dropdown + Reset Action */}
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+              <GoogleAccountSecurity />
+
               <select
                 value={activePersona}
                 onChange={(e) => setActivePersona(e.target.value)}
@@ -304,7 +310,8 @@ export default function App() {
             { id: "engineering", label: "Phase 5: Field & Remote Engineering", icon: Server },
             { id: "support", label: "Phase 6: Support & KAM Chat", icon: MessageSquare },
             { id: "lifecycle", label: "Phase 7: Contract Lifecycle", icon: RefreshCw },
-            { id: "analytics", label: "Executive Visibility", icon: TrendingUp }
+            { id: "analytics", label: "Executive Visibility", icon: TrendingUp },
+            { id: "kpi_metrics", label: "KPI & Tracking Metrics", icon: BarChart3 }
           ].map(tab => {
             const Icon = tab.icon;
             const isTabActive = activeTab === tab.id;
@@ -424,6 +431,16 @@ export default function App() {
               quotations={quotations}
               cases={cases}
               tickets={tickets}
+            />
+          )}
+
+          {activeTab === "kpi_metrics" && (
+            <KpiMetricsDashboard
+              leads={leads}
+              quotations={quotations}
+              cases={cases}
+              tickets={tickets}
+              lifecycleRequests={lifecycleRequests}
             />
           )}
         </div>
