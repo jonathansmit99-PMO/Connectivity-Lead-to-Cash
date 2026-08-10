@@ -215,8 +215,10 @@ Lead Time:          ${quoteToDownload.leadTimeWeeks || 4} Weeks
 -------------------------------------------------------------------
 COMMERCIAL FINANCIAL BREAKDOWN (ZAR)
 -------------------------------------------------------------------
-Non-Recurring Setup Fee (NRC):  R ${(quoteToDownload.nrc || 0).toLocaleString()}
-Monthly Recurring Cost (MRC):  R ${(quoteToDownload.mrc || 0).toLocaleString()} / month
+Contract Term:                      ${quoteToDownload.termMonths || selectedProduct.term || 24} Months
+Non-Recurring Setup Fee (NRC):      R ${(quoteToDownload.nrc || 0).toLocaleString()}
+Monthly Recurring Cost (MRC):      R ${(quoteToDownload.mrc || 0).toLocaleString()} / month
+Total Contract Value (TCV):         R ${(((quoteToDownload.mrc || 0) * (parseInt(quoteToDownload.termMonths || selectedProduct.term || 24))) + (quoteToDownload.nrc || 0)).toLocaleString()}
 
 -------------------------------------------------------------------
 TERMS & COMPLIANCE
@@ -872,7 +874,8 @@ Contact: quotes@connectiq.reunert.co.za
                   <div className="flex justify-between"><span className="text-slate-400">Bandwidth:</span> <span className="font-bold text-slate-800">{activeQuote.bandwidth}</span></div>
                   <div className="flex justify-between"><span className="text-slate-400">NRC Setup:</span> <span className="font-bold text-slate-800">R {activeQuote.nrc.toLocaleString()}</span></div>
                   <div className="flex justify-between"><span className="text-slate-400">MRC Monthly:</span> <span className="font-bold text-slate-800">R {activeQuote.mrc.toLocaleString()}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Term:</span> <span className="font-bold text-slate-800">{activeQuote.termMonths} Months</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Term:</span> <span className="font-bold text-slate-800">{activeQuote.termMonths || 24} Months</span></div>
+                  <div className="flex justify-between border-t border-emerald-200/60 pt-1.5 mt-1.5"><span className="text-teal-700 font-extrabold">Total Contract Value (TCV):</span> <span className="font-mono font-extrabold text-teal-800">R {((activeQuote.mrc * (activeQuote.termMonths || 24)) + (activeQuote.nrc || 0)).toLocaleString()}</span></div>
                   <div className="flex justify-between"><span className="text-slate-400">Network Operator:</span> <span className="font-bold text-slate-800">{activeQuote.networkOperator}</span></div>
                   <div className="flex justify-between"><span className="text-slate-400">Contention:</span> <span className="font-mono font-bold text-slate-800">{activeQuote.contention}</span></div>
                 </div>

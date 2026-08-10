@@ -253,9 +253,11 @@ Lead Time:          ${quoteToDownload.leadTimeWeeks} Weeks
 -------------------------------------------------------------------
 COMMERCIAL FINANCIAL BREAKDOWN (ZAR)
 -------------------------------------------------------------------
-Non-Recurring Setup Fee (NRC):  R ${quoteToDownload.nrc.toLocaleString()}
-Monthly Recurring Cost (MRC):  R ${quoteToDownload.mrc.toLocaleString()} / month
-Margin Compliance:              ${quoteToDownload.marginPercentage}%
+Contract Term:                      ${quoteToDownload.termMonths || 24} Months
+Non-Recurring Setup Fee (NRC):      R ${quoteToDownload.nrc.toLocaleString()}
+Monthly Recurring Cost (MRC):      R ${quoteToDownload.mrc.toLocaleString()} / month
+Total Contract Value (TCV):         R ${((quoteToDownload.mrc * (quoteToDownload.termMonths || 24)) + quoteToDownload.nrc).toLocaleString()}
+Margin Compliance:                  ${quoteToDownload.marginPercentage}%
 
 -------------------------------------------------------------------
 TERMS & COMPLIANCE
@@ -750,7 +752,7 @@ Contact: quotes@connectiq.reunert.co.za
                       <span className="font-mono font-medium truncate">{vendorQuoteFile}</span>
                       <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-sans">Wholesale Quote Attached</span>
                     </div>
-                    <span className="text-[10px] text-emerald-700 font-semibold font-mono">Parsed ✓</span>
+                    <span className="text-[10px] text-emerald-700 font-semibold font-mono">Passed ✓</span>
                   </div>
                 )}
               </div>
@@ -908,7 +910,7 @@ Contact: quotes@connectiq.reunert.co.za
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <p className="text-[10px] text-slate-400 font-bold uppercase">Commercial Revenue (MRC)</p>
                   <p className="text-lg font-extrabold text-slate-800 font-mono">R {activeQuote.mrc.toLocaleString()} <span className="text-xs text-slate-400">/pm</span></p>
@@ -927,12 +929,22 @@ Contact: quotes@connectiq.reunert.co.za
                   </div>
                 </div>
                 <div className="space-y-1">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">Contract Term</p>
+                  <p className="text-base font-extrabold text-slate-800 font-mono">{activeQuote.termMonths || 24} Months</p>
+                </div>
+                <div className="space-y-1">
                   <p className="text-[10px] text-slate-400 font-bold uppercase">Install Setup Fee (NRC)</p>
                   <p className="text-sm font-bold text-slate-800 font-mono">R {activeQuote.nrc.toLocaleString()}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] text-slate-400 font-bold uppercase">Reseller Channel Commission (10%)</p>
                   <p className="text-xs font-bold text-indigo-700 font-mono">R {calculateCommission(activeQuote.mrc).toLocaleString()} <span className="text-[9px] text-slate-400 font-normal">on completion</span></p>
+                </div>
+                <div className="space-y-1 bg-teal-50/60 p-2 rounded-lg border border-teal-200/60">
+                  <p className="text-[10px] text-teal-700 font-extrabold uppercase">Total Contract Value (TCV)</p>
+                  <p className="text-base font-extrabold text-teal-800 font-mono">
+                    R {((activeQuote.mrc * (activeQuote.termMonths || 24)) + (activeQuote.nrc || 0)).toLocaleString()}
+                  </p>
                 </div>
               </div>
 
