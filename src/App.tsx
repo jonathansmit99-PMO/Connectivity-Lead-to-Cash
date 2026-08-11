@@ -15,7 +15,8 @@ import {
   Award,
   Server,
   Sparkles,
-  BarChart3
+  BarChart3,
+  Target
 } from "lucide-react";
 
 // Types
@@ -46,6 +47,7 @@ import OmniAgent from "./components/OmniAgent";
 import ContractLifecycle from "./components/ContractLifecycle";
 import GoogleAccountSecurity from "./components/GoogleAccountSecurity";
 import KpiMetricsDashboard from "./components/KpiMetricsDashboard";
+import RoadmapVisionView from "./components/RoadmapVisionView";
 
 export default function App() {
   // Shared state synchronized with localStorage
@@ -303,6 +305,7 @@ export default function App() {
         <div className="flex flex-wrap gap-2 pb-3 border-b border-slate-200">
           {[
             { id: "landing", label: "ConnectIQ Landing", icon: Sparkles },
+            { id: "roadmap", label: "Strategic Roadmap & Vision", icon: Target },
             { id: "onboarding", label: "Phase 1: Onboarding Flow", icon: Building },
             { id: "feasibility", label: "Phase 2: Feasibility & Quote", icon: MapPin },
             { id: "margin", label: "Phase 3: Margin & Handoff", icon: ClipboardCheck },
@@ -338,6 +341,12 @@ export default function App() {
             <LandingPage
               onNavigateTab={(tabId) => setActiveTab(tabId)}
               activeLeadCompanyName={activeLead?.companyName}
+            />
+          )}
+
+          {activeTab === "roadmap" && (
+            <RoadmapVisionView
+              onNavigateTab={(tabId) => setActiveTab(tabId)}
             />
           )}
 

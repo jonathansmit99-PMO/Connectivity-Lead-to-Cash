@@ -180,7 +180,7 @@ export default function ProjectCharterModal({
           "• Connectivity Delivery & Field Velocity: Real-time civil trenching milestone tracking, wayleave sign-offs, and OTD.",
           "• Field Engineering Quality: CPE router configuration, Signal Quality (dBm) logging, and digital customer sign-off.",
           "• KAM Support & SLA Tracking: P1/P2 incident ticket logging, 2.4hr MTTR monitoring, and SLA uptime compliance.",
-          "• Contract Lifecycle & Retention: 24/36-month contract renewals, automated upgrade workflows, and zero churn tracking."
+          "• Contract Lifecycle & Retention: 12/24/36-month contract renewals, automated upgrade workflows, and zero churn tracking."
         ];
 
         doc.setFont("helvetica", "normal");
@@ -402,7 +402,7 @@ export default function ProjectCharterModal({
                 { title: "Commercial Margin Governance", desc: "Automates wholesale cost calculations and enforces a mandatory 35% gross margin gate." },
                 { title: "Field Engineering Velocity", desc: "Real-time civil trenching milestones, CPE router activation, signal testing (dBm), and digital sign-off." },
                 { title: "KAM Support SLA Monitoring", desc: "P1/P2 incident tracking, MTTR resolution speed, and 99.5% network uptime compliance." },
-                { title: "Contract Lifecycle & Retention", desc: "Automates 24/36m renewal notifications, bandwidth upgrades, and churn prevention." }
+                { title: "Contract Lifecycle & Retention", desc: "Automates 12/24/36m renewal notifications, bandwidth upgrades, and churn prevention." }
               ].map((scope, idx) => (
                 <div key={idx} className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1">
                   <h4 className="text-xs font-bold text-teal-300">{scope.title}</h4>

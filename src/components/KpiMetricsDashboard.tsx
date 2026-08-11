@@ -252,7 +252,7 @@ export default function KpiMetricsDashboard({
       status: "Zero Churn",
       statusType: "success",
       icon: RefreshCw,
-      description: "Bandwidth expansion requests and 24/36m renewal contract executions.",
+      description: "Bandwidth expansion requests and 12/24/36m renewal contract executions.",
       formula: "Count(Approved Upgrade Requests + Vetted Renewal Contracts)",
       impact: "Increases account Lifetime Value (LTV) and protects recurring baseline."
     }
