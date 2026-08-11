@@ -16,7 +16,8 @@ import {
   Server,
   Sparkles,
   BarChart3,
-  Target
+  Target,
+  Megaphone
 } from "lucide-react";
 
 // Types
@@ -48,6 +49,7 @@ import ContractLifecycle from "./components/ContractLifecycle";
 import GoogleAccountSecurity from "./components/GoogleAccountSecurity";
 import KpiMetricsDashboard from "./components/KpiMetricsDashboard";
 import RoadmapVisionView from "./components/RoadmapVisionView";
+import GtmMarketingPlanView from "./components/GtmMarketingPlanView";
 
 export default function App() {
   // Shared state synchronized with localStorage
@@ -314,7 +316,8 @@ export default function App() {
             { id: "support", label: "Phase 6: Support & KAM Chat", icon: MessageSquare },
             { id: "lifecycle", label: "Phase 7: Contract Lifecycle", icon: RefreshCw },
             { id: "analytics", label: "Executive Visibility", icon: TrendingUp },
-            { id: "kpi_metrics", label: "KPI & Tracking Metrics", icon: BarChart3 }
+            { id: "kpi_metrics", label: "KPI & Tracking Metrics", icon: BarChart3 },
+            { id: "gtm_plan", label: "GTM & Marketing Strategy", icon: Megaphone }
           ].map(tab => {
             const Icon = tab.icon;
             const isTabActive = activeTab === tab.id;
@@ -450,6 +453,12 @@ export default function App() {
               cases={cases}
               tickets={tickets}
               lifecycleRequests={lifecycleRequests}
+            />
+          )}
+
+          {activeTab === "gtm_plan" && (
+            <GtmMarketingPlanView
+              onNavigateTab={(tabId) => setActiveTab(tabId)}
             />
           )}
         </div>
