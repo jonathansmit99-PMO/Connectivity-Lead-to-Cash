@@ -338,7 +338,7 @@ KPI Impact: Quote turnaround reduced from 7 days to < 3 minutes; 100% Margin Com
                   <div className="space-y-1.5 pt-2 border-t border-teal-200/60 text-xs text-slate-700">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>Interactive Satellite Rooftop Aerial View</span>
+                      <span>Interactive Satellite GIS View</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
@@ -514,7 +514,7 @@ KPI Impact: Quote turnaround reduced from 7 days to < 3 minutes; 100% Margin Com
                   Requires preliminary physical site visits or slow manual fibre coverage map checks.
                 </td>
                 <td className="p-3.5 bg-teal-50/50 text-teal-950">
-                  <strong className="block text-teal-800 text-sm font-extrabold">Instant GIS Rooftop Aerial</strong>
+                  <strong className="block text-teal-800 text-sm font-extrabold">Instant GIS Results</strong>
                   High-res satellite view with LOS verification, GPS coordinates, and contention checks.
                 </td>
               </tr>
