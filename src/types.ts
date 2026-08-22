@@ -65,7 +65,7 @@ export interface FeasibilityStudy {
 
 export interface ProductSelection {
   leadId: string;
-  serviceType: 'broadband' | 'enterprise';
+  serviceType: 'broadband' | 'premium' | 'enterprise' | 'secured';
   bandwidth: string; // e.g. "100 Mbps", "1 Gbps"
   term: '12' | '24' | '36'; // months
   vendor: string;

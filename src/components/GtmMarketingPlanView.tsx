@@ -69,20 +69,20 @@ export default function GtmMarketingPlanView({ onNavigateTab }: GtmMarketingPlan
   return (
     <div className="space-y-8 animate-fadeIn text-slate-800" id="printable-gtm-plan">
       {/* 1. EXECUTIVE HEADER BANNER */}
-      <div className="bg-gradient-to-r from-slate-900 via-teal-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white border border-teal-800/60 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-gradient-to-r from-[#0f1e41] via-[#16274e] to-[#0f1e41] rounded-3xl p-6 sm:p-8 text-white border border-[#1b2f5b] shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#0d8e91]/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-[#43a9ac]/15 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div className="space-y-3 max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-teal-500/20 text-teal-300 border border-teal-500/30 px-3 py-1 rounded-full text-xs font-bold font-mono">
-              <Megaphone className="w-3.5 h-3.5 text-teal-300" />
+            <div className="inline-flex items-center gap-2 bg-[#0d8e91]/20 text-[#43a9ac] border border-[#0d8e91]/30 px-3 py-1 rounded-full text-xs font-bold font-display">
+              <Megaphone className="w-3.5 h-3.5 text-[#43a9ac]" />
               Go-To-Market (GTM) & Channel Marketing Strategy
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-              ConnectIQ Go-To-Market Plan <br className="hidden sm:inline" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 via-emerald-300 to-teal-100">
+            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight font-display">
+              Reunert Connect Go-To-Market Plan <br className="hidden sm:inline" />
+              <span className="text-[#43a9ac]">
                 Positioning, Acquisition Pillars & Growth Engine
               </span>
             </h1>

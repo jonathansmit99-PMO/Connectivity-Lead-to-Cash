@@ -160,27 +160,27 @@ export default function App() {
   const activeLead = leads.find(l => l.id === selectedLeadId) || leads[0];
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col selection:bg-teal-100 selection:text-teal-900" id="app-root">
-      {/* 1. Global Reunert Connect Brand Header */}
-      <header className="bg-[#1c2836] text-white border-b border-slate-700/50 sticky top-0 z-50">
+    <div className="min-h-screen bg-[#F4F7F9] font-sans text-[#0f1e41] flex flex-col selection:bg-[#43a9ac]/30 selection:text-[#0f1e41]" id="app-root">
+      {/* 1. Global Reunert Connect Brand Header (Deep Navy: #0f1e41) */}
+      <header className="bg-[#0f1e41] text-white border-b border-[#1b2f5b] sticky top-0 z-50 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Logo Brand Title */}
           <div className="flex items-center gap-3">
             <ConnectNavLogo light={true} className="text-white" />
-            <div className="h-6 w-px bg-slate-700 hidden sm:block"></div>
+            <div className="h-6 w-px bg-[#233866] hidden sm:block"></div>
             <div className="hidden sm:block">
-              <span className="text-xs font-semibold bg-slate-800 px-2.5 py-1 rounded text-slate-300 border border-slate-700">Lead to Cash Workflow Engine</span>
+              <span className="text-xs font-semibold bg-[#16274e] px-2.5 py-1 rounded text-slate-300 border border-[#233866]">Lead to Cash Workflow Engine</span>
             </div>
           </div>
 
           {/* End-to-End Process Progress Bar */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 bg-slate-800/80 border border-slate-700/80 rounded-xl px-3.5 py-2 min-w-[280px] sm:min-w-[420px] lg:min-w-[540px]">
+          <div className="flex flex-col sm:flex-row items-center gap-3 bg-[#16274e] border border-[#233866] rounded-xl px-3.5 py-2 min-w-[280px] sm:min-w-[420px] lg:min-w-[540px]">
             <div className="flex-1 w-full space-y-1.5">
               <div className="flex items-center justify-between text-[11px] font-bold">
                 <span className="text-slate-300 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
-                  <span className="text-slate-400 uppercase text-[10px] tracking-wider">Process Progress:</span>
-                  <span className="text-teal-300 font-bold">{
+                  <span className="w-2 h-2 rounded-full bg-[#43a9ac] animate-pulse"></span>
+                  <span className="text-slate-400 uppercase text-[10px] tracking-wider font-display">Process Progress:</span>
+                  <span className="text-[#43a9ac] font-bold">{
                     activeTab === "landing" ? "Overview & Landing" :
                     activeTab === "onboarding" ? "Phase 1: Onboarding Flow" :
                     activeTab === "feasibility" ? "Phase 2: Feasibility & Quote" :
@@ -192,7 +192,7 @@ export default function App() {
                     activeTab === "analytics" ? "Executive Visibility" : "KPI & Tracking Metrics"
                   }</span>
                 </span>
-                <span className="text-teal-400 font-mono font-bold bg-teal-950/80 border border-teal-800/60 px-2 py-0.5 rounded text-[10px]">
+                <span className="text-[#43a9ac] font-mono font-bold bg-[#0a1631] border border-[#233866] px-2 py-0.5 rounded text-[10px]">
                   {
                     activeTab === "landing" ? "10%" :
                     activeTab === "onboarding" ? "25%" :
@@ -207,9 +207,9 @@ export default function App() {
               </div>
 
               {/* Progress Bar Track */}
-              <div className="relative w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-700/60">
+              <div className="relative w-full bg-[#0a1631] rounded-full h-2 overflow-hidden border border-[#233866]">
                 <div 
-                  className="h-full bg-gradient-to-r from-teal-500 via-emerald-400 to-teal-300 transition-all duration-500 ease-out rounded-full shadow-[0_0_10px_rgba(20,184,166,0.5)]"
+                  className="h-full bg-gradient-to-r from-[#0d8e91] via-[#43a9ac] to-[#68c6c9] transition-all duration-500 ease-out rounded-full shadow-[0_0_10px_rgba(13,142,145,0.5)]"
                   style={{
                     width: 
                       activeTab === "landing" ? "10%" :
@@ -306,7 +306,7 @@ export default function App() {
       <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex-1 flex flex-col gap-6">
         <div className="flex flex-wrap gap-2 pb-3 border-b border-slate-200">
           {[
-            { id: "landing", label: "ConnectIQ Landing", icon: Sparkles },
+            { id: "landing", label: "Reunert Connect Marketplace", icon: Sparkles },
             { id: "roadmap", label: "Strategic Roadmap & Vision", icon: Target },
             { id: "onboarding", label: "Phase 1: Onboarding Flow", icon: Building },
             { id: "feasibility", label: "Phase 2: Feasibility & Quote", icon: MapPin },
@@ -325,13 +325,13 @@ export default function App() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-2 px-4 rounded-xl text-xs font-bold transition-all border shrink-0 flex items-center gap-2 cursor-pointer ${
+                className={`py-2 px-4 rounded-xl text-xs font-bold transition-all border shrink-0 flex items-center gap-2 cursor-pointer font-display ${
                   isTabActive
-                    ? "bg-teal-600 border-teal-600 text-white shadow-xs"
-                    : "bg-white border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-50"
+                    ? "bg-[#0d8e91] border-[#0d8e91] text-white shadow-sm"
+                    : "bg-white border-slate-200 text-[#0f1e41]/80 hover:text-[#0f1e41] hover:bg-slate-50"
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isTabActive ? "text-teal-200" : "text-slate-400"}`} />
+                <Icon className={`w-4 h-4 ${isTabActive ? "text-white" : "text-[#0d8e91]"}`} />
                 {tab.label}
               </button>
             );

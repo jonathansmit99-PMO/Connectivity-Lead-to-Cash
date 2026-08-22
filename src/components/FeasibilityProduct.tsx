@@ -115,7 +115,7 @@ export default function FeasibilityProduct({
 
   // Local state for product selection
   const [selectedProduct, setSelectedProduct] = useState({
-    serviceType: "enterprise" as "broadband" | "premium" | "enterprise",
+    serviceType: "enterprise" as "broadband" | "premium" | "enterprise" | "secured",
     bandwidth: "200 Mbps",
     term: "24" as "12" | "24" | "36",
     vendor: "Reunert Fibre"
@@ -251,7 +251,7 @@ Contact: quotes@connectiq.reunert.co.za
         setRawQuoteText(text);
       } else {
         setRawQuoteText(
-          `Extracted Quotation Document: ${file.name}\nSize: ${(file.size / 1024).toFixed(1)} KB\nQuote Ref: FC-${Math.floor(10000 + Math.random() * 90000)}\nService: ${selectedProduct.bandwidth} (${selectedProduct.serviceType === "enterprise" ? "Enterprise Dedicated" : selectedProduct.serviceType === "premium" ? "Premium Business" : "Broadband"} Link)\nVendor: ${selectedProduct.vendor}\nMonthly Recurring: R ${selectedProduct.serviceType === "enterprise" ? "12500" : selectedProduct.serviceType === "premium" ? "7500" : "4200"}\nInstall Setup NRC: R ${selectedProduct.serviceType === "enterprise" ? "8500" : selectedProduct.serviceType === "premium" ? "4500" : "2500"}\nTerm: ${selectedProduct.term} Months`
+          `Extracted Quotation Document: ${file.name}\nSize: ${(file.size / 1024).toFixed(1)} KB\nQuote Ref: FC-${Math.floor(10000 + Math.random() * 90000)}\nService: ${selectedProduct.bandwidth} (${selectedProduct.serviceType === "secured" ? "Secured Connectivity (UTM & SASE)" : selectedProduct.serviceType === "enterprise" ? "Enterprise Dedicated" : selectedProduct.serviceType === "premium" ? "Premium Business" : "Broadband"} Link)\nVendor: ${selectedProduct.vendor}\nMonthly Recurring: R ${selectedProduct.serviceType === "secured" ? "14800" : selectedProduct.serviceType === "enterprise" ? "12500" : selectedProduct.serviceType === "premium" ? "7500" : "4200"}\nInstall Setup NRC: R ${selectedProduct.serviceType === "secured" ? "9500" : selectedProduct.serviceType === "enterprise" ? "8500" : selectedProduct.serviceType === "premium" ? "4500" : "2500"}\nTerm: ${selectedProduct.term} Months`
         );
       }
     };
@@ -377,17 +377,19 @@ Contact: quotes@connectiq.reunert.co.za
         address: address,
         gpsCoordinates: gps,
         networkOperator: selectedProduct.vendor,
-        networkType: selectedProduct.serviceType === "enterprise" ? "Fiber" : "LTE",
+        networkType: selectedProduct.serviceType === "broadband" ? "Wireless" : "Fiber",
         networkStatus: "Live",
         leadTimeWeeks: 4,
         bandwidth: selectedProduct.bandwidth,
-        nrc: 4500,
-        mrc: 8200,
+        nrc: selectedProduct.serviceType === "secured" ? 9500 : selectedProduct.serviceType === "enterprise" ? 8500 : selectedProduct.serviceType === "premium" ? 4500 : 2500,
+        mrc: selectedProduct.serviceType === "secured" ? 14800 : selectedProduct.serviceType === "enterprise" ? 12500 : selectedProduct.serviceType === "premium" ? 7500 : 4200,
         termMonths: parseInt(selectedProduct.term),
         lastMileProvider: selectedProduct.vendor,
-        contention: selectedProduct.serviceType === "enterprise" ? "1:1" : "1:4",
+        contention: selectedProduct.serviceType === "secured" || selectedProduct.serviceType === "enterprise" ? "1:1" : selectedProduct.serviceType === "premium" ? "1:2" : "1:5",
         provisioningType: "Layer 3",
-        notes: "Parsed automatically using static client calculations. Secure fiber last-mile delivery verified.",
+        notes: selectedProduct.serviceType === "secured"
+          ? "Parsed automatically. Includes 24/7 Managed Next-Gen AI Firewall (UTM), SASE Zero-Trust, Anti-DDoS and Layer 3 static peering."
+          : "Parsed automatically using static client calculations. Secure fiber last-mile delivery verified.",
         pricingValidityDays: 30,
         marginPercentage: 50.0,
         status: "uploaded"
@@ -409,7 +411,7 @@ Contact: quotes@connectiq.reunert.co.za
   };
 
   const handleManualUpload = () => {
-    const baseMrc = selectedProduct.serviceType === "enterprise" ? 12500 : selectedProduct.serviceType === "premium" ? 7500 : 4200;
+    const baseMrc = selectedProduct.serviceType === "secured" ? 14800 : selectedProduct.serviceType === "enterprise" ? 12500 : selectedProduct.serviceType === "premium" ? 7500 : 4200;
     const addonsMrc = calculateAddonsMrc();
     const totalMrc = baseMrc + addonsMrc;
     const margin = 50;
@@ -421,7 +423,9 @@ Contact: quotes@connectiq.reunert.co.za
       ...selectedAddons.telephones
     ];
 
-    const notesStr = allSelectedAddons.length > 0
+    const notesStr = selectedProduct.serviceType === "secured"
+      ? `Secured Connectivity Tier (Embedded AI UTM & SASE Zero-Trust). ${allSelectedAddons.length > 0 ? `Additional Add-ons: ${allSelectedAddons.join(", ")}.` : ""}`
+      : allSelectedAddons.length > 0
       ? `Quotation created via platform wizard. Included Add-on Products: ${allSelectedAddons.join(", ")}.`
       : "Quotation created through platform wizard selections.";
 
@@ -435,11 +439,11 @@ Contact: quotes@connectiq.reunert.co.za
       networkStatus: "Live",
       leadTimeWeeks: selectedProduct.vendor === "Fibre Com Connect" ? 4 : 2,
       bandwidth: selectedProduct.bandwidth,
-      nrc: selectedProduct.serviceType === "enterprise" ? 8500 : selectedProduct.serviceType === "premium" ? 4500 : 2500,
+      nrc: selectedProduct.serviceType === "secured" ? 9500 : selectedProduct.serviceType === "enterprise" ? 8500 : selectedProduct.serviceType === "premium" ? 4500 : 2500,
       mrc: totalMrc,
       termMonths: parseInt(selectedProduct.term),
       lastMileProvider: selectedProduct.vendor,
-      contention: selectedProduct.serviceType === "enterprise" ? "1:1" : selectedProduct.serviceType === "premium" ? "1:2" : "1:5",
+      contention: selectedProduct.serviceType === "secured" || selectedProduct.serviceType === "enterprise" ? "1:1" : selectedProduct.serviceType === "premium" ? "1:2" : "1:5",
       provisioningType: "Layer 3",
       notes: notesStr,
       pricingValidityDays: 30,
@@ -567,37 +571,48 @@ Contact: quotes@connectiq.reunert.co.za
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Service Tier Type</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5 font-display">Service Tier Type</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                   <button
                     onClick={() => setSelectedProduct(prev => ({ ...prev, serviceType: "enterprise" }))}
-                    className={`py-2 px-3 border rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    className={`py-2.5 px-3 border rounded-lg text-xs font-bold transition-all cursor-pointer font-display ${
                       selectedProduct.serviceType === "enterprise"
-                        ? "border-teal-500 bg-teal-50 text-teal-700 shadow-xs"
-                        : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                        ? "border-[#0d8e91] bg-[#e6f4f4] text-[#0d8e91] shadow-xs ring-1 ring-[#0d8e91]"
+                        : "border-slate-200 text-slate-700 hover:bg-slate-50"
                     }`}
                   >
-                    Enterprise Dedicated Link
+                    Enterprise Dedicated
                   </button>
                   <button
                     onClick={() => setSelectedProduct(prev => ({ ...prev, serviceType: "premium" }))}
-                    className={`py-2 px-3 border rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    className={`py-2.5 px-3 border rounded-lg text-xs font-bold transition-all cursor-pointer font-display ${
                       selectedProduct.serviceType === "premium"
-                        ? "border-teal-500 bg-teal-50 text-teal-700 shadow-xs"
-                        : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                        ? "border-[#0d8e91] bg-[#e6f4f4] text-[#0d8e91] shadow-xs ring-1 ring-[#0d8e91]"
+                        : "border-slate-200 text-slate-700 hover:bg-slate-50"
                     }`}
                   >
-                    Premium Business Link
+                    Premium Business
                   </button>
                   <button
                     onClick={() => setSelectedProduct(prev => ({ ...prev, serviceType: "broadband" }))}
-                    className={`py-2 px-3 border rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    className={`py-2.5 px-3 border rounded-lg text-xs font-bold transition-all cursor-pointer font-display ${
                       selectedProduct.serviceType === "broadband"
-                        ? "border-teal-500 bg-teal-50 text-teal-700 shadow-xs"
-                        : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                        ? "border-[#0d8e91] bg-[#e6f4f4] text-[#0d8e91] shadow-xs ring-1 ring-[#0d8e91]"
+                        : "border-slate-200 text-slate-700 hover:bg-slate-50"
                     }`}
                   >
-                    Broadband Business Link
+                    Broadband Service
+                  </button>
+                  <button
+                    onClick={() => setSelectedProduct(prev => ({ ...prev, serviceType: "secured" }))}
+                    className={`py-2.5 px-3 border rounded-lg text-xs font-bold transition-all cursor-pointer font-display flex items-center justify-center gap-1.5 ${
+                      selectedProduct.serviceType === "secured"
+                        ? "border-[#0d8e91] bg-[#0f1e41] text-white shadow-xs ring-1 ring-[#0d8e91]"
+                        : "border-[#0d8e91]/40 bg-[#f0fafb] text-[#0d8e91] hover:bg-[#e6f4f4]"
+                    }`}
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#0d8e91]" />
+                    <span>Secured Connectivity</span>
                   </button>
                 </div>
               </div>

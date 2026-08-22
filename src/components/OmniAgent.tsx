@@ -383,21 +383,21 @@ Ask me anything about margins, SLA terms, CIPC / FICA compliance status, link de
             className="w-[360px] sm:w-[400px] h-[580px] bg-white border border-slate-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden max-w-[calc(100vw-32px)]"
           >
             {/* Header */}
-            <div className="bg-[#1c2836] text-white p-4 flex items-center justify-between border-b border-slate-700/50">
+            <div className="bg-[#0f1e41] text-white p-4 flex items-center justify-between border-b border-[#1b2f5b]">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-teal-600 rounded-lg text-white">
+                <div className="p-1.5 bg-[#0d8e91] rounded-lg text-white">
                   <Sparkles className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold font-sans text-white flex items-center gap-1.5">
+                  <h3 className="text-xs font-bold font-display text-white flex items-center gap-1.5">
                     ConnectNAV Assist
                   </h3>
-                  <p className="text-[9px] text-slate-400 font-mono tracking-wider uppercase">ConnectNAV Intelligent Assistant</p>
+                  <p className="text-[9px] text-[#43a9ac] font-mono tracking-wider uppercase">Reunert Connect AI Assistant</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+                className="text-slate-300 hover:text-white p-1 rounded-lg hover:bg-[#16274e] transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -436,7 +436,7 @@ Ask me anything about margins, SLA terms, CIPC / FICA compliance status, link de
                       className={`p-3.5 rounded-2xl shadow-xs border text-[11px] leading-relaxed ${
                         isAgent
                           ? "bg-white text-slate-800 border-slate-200/80 rounded-tl-none"
-                          : "bg-[#1c2836] text-white border-slate-800 rounded-tr-none"
+                          : "bg-[#0f1e41] text-white border-[#1b2f5b] rounded-tr-none"
                       }`}
                     >
                       {isAgent ? (

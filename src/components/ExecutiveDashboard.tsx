@@ -102,11 +102,11 @@ export default function ExecutiveDashboard({
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Total Revenue */}
-          <div className="bg-gradient-to-br from-[#1c2836] to-[#141f2a] text-white rounded-xl p-5 shadow-sm relative overflow-hidden flex flex-col justify-between border border-slate-850">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/10 rounded-full blur-xl"></div>
+          <div className="bg-gradient-to-br from-[#0f1e41] to-[#091530] text-white rounded-xl p-5 shadow-sm relative overflow-hidden flex flex-col justify-between border border-[#1b2f5b]">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#0d8e91]/20 rounded-full blur-xl"></div>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider">Total Revenue Portfolio</span>
-              <div className="p-1.5 bg-teal-500/10 rounded-lg text-teal-400"><DollarSign className="w-4 h-4" /></div>
+              <span className="text-[10px] font-bold text-[#43a9ac] uppercase tracking-wider font-display">Total Revenue Portfolio</span>
+              <div className="p-1.5 bg-[#0d8e91]/20 rounded-lg text-[#43a9ac]"><DollarSign className="w-4 h-4" /></div>
             </div>
             <div className="mt-4">
               <h3 className="text-2xl font-extrabold font-mono text-white">R {totalPortfolioRevenue.toLocaleString()}</h3>

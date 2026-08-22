@@ -151,9 +151,9 @@ export default function ContractLifecycle({
         {/* Current Active Service Details card */}
         <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden flex flex-col justify-between">
           <div>
-            <div className="bg-[#1c2836] text-white p-4 flex items-center justify-between">
+            <div className="bg-[#0f1e41] text-white p-4 flex items-center justify-between border-b border-[#1b2f5b]">
               <div className="flex items-center gap-2">
-                <Building className="w-5 h-5 text-teal-400" />
+                <Building className="w-5 h-5 text-[#43a9ac]" />
                 <div>
                   <h3 className="text-sm font-bold text-white font-sans">{activeLead.companyName}</h3>
                   <p className="text-[10px] text-slate-400 font-mono">CURRENT ENTERPRISE SERVICE PROFILE</p>
@@ -313,9 +313,9 @@ export default function ContractLifecycle({
               exit={{ scale: 0.95, opacity: 0 }}
               className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden"
             >
-              <div className="bg-[#1c2836] text-white p-4 flex items-center justify-between">
+              <div className="bg-[#0f1e41] text-white p-4 flex items-center justify-between border-b border-[#1b2f5b]">
                 <div className="flex items-center gap-2">
-                  <RefreshCw className="w-4 h-4 text-teal-400 animate-spin-slow" />
+                  <RefreshCw className="w-4 h-4 text-[#43a9ac] animate-spin-slow" />
                   <h3 className="text-xs font-bold text-white uppercase tracking-wider font-sans">
                     Request Link Modification
                   </h3>

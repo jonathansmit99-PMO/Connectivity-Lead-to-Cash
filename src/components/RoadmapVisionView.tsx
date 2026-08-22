@@ -55,20 +55,20 @@ KPI Impact: Quote turnaround reduced from 7 days to < 3 minutes; 100% Margin Com
   return (
     <div className="space-y-8 animate-fadeIn text-slate-800" id="printable-roadmap">
       {/* 1. EXECUTIVE BANNER & VISION HEADER */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white border border-slate-700 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-gradient-to-r from-[#0f1e41] via-[#16274e] to-[#0f1e41] rounded-3xl p-6 sm:p-8 text-white border border-[#1b2f5b] shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#0d8e91]/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-[#43a9ac]/15 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div className="space-y-3 max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-teal-500/20 text-teal-300 border border-teal-500/30 px-3 py-1 rounded-full text-xs font-bold font-mono">
-              <Sparkles className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center gap-2 bg-[#0d8e91]/20 text-[#43a9ac] border border-[#0d8e91]/30 px-3 py-1 rounded-full text-xs font-bold font-display">
+              <Sparkles className="w-3.5 h-3.5 text-[#43a9ac]" />
               Strategic Executive Briefing & Roadmap
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-              ConnectIQ Digital Transformation <br className="hidden sm:inline" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-emerald-300 to-teal-200">
+            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight font-display">
+              Reunert Connect Digital Transformation <br className="hidden sm:inline" />
+              <span className="text-[#43a9ac]">
                 Vision, Roadmap & KPI Business Impact
               </span>
             </h1>
@@ -175,7 +175,7 @@ KPI Impact: Quote turnaround reduced from 7 days to < 3 minutes; 100% Margin Com
                 <h3 className="font-extrabold text-xs text-slate-800">Dramatically Accelerate Speed-to-Quote</h3>
               </div>
               <p className="text-xs text-slate-600 leading-normal">
-                Reduce client quotation waiting time from <strong>5 to 10 business days</strong> down to <strong>under 3 minutes</strong> via satellite rooftop GIS lookup and instant pricing matrices.
+                Reduce client quotation waiting time from <strong>5 to 10 business days</strong> down to <strong>under 3 minutes</strong> via GIS fiber trenching lookup and instant pricing matrices.
               </p>
             </div>
 
@@ -332,7 +332,7 @@ KPI Impact: Quote turnaround reduced from 7 days to < 3 minutes; 100% Margin Com
                   </div>
 
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    Satellite rooftop spatial mapping, line-of-sight analysis, instant vendor pricing lookup (MRC + NRC), 12/24/36-mo TCV calculations, and PDF quote generator.
+                    Fiber trenching, line-of-sight analysis, instant vendor pricing lookup (MRC + NRC), 12/24/36-mo TCV calculations, and PDF quote generator.
                   </p>
 
                   <div className="space-y-1.5 pt-2 border-t border-teal-200/60 text-xs text-slate-700">
@@ -497,7 +497,7 @@ KPI Impact: Quote turnaround reduced from 7 days to < 3 minutes; 100% Margin Com
                 </td>
                 <td className="p-3.5 bg-teal-50/50 text-teal-950">
                   <strong className="block text-teal-800 text-sm font-extrabold">&lt; 3 Minutes (Instant)</strong>
-                  Automated satellite GIS rooftop mapping & instant vendor rate card calculation.
+                  Automated GIS fiber trenching mapping & instant vendor rate card calculation.
                 </td>
               </tr>
 
